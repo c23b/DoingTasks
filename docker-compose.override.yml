@@ -1,0 +1,17 @@
+services:
+  api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    volumes:
+      - ./src/backend:/app
+
+  web:
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./src/frontend/Angular/doing-tasks:/app
+      - /app/node_modules
+
+  db:
+    environment:
+      - SA_PASSWORD=Dev@Password123
