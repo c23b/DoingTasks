@@ -427,3 +427,10 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# containers
+.containers/
+pg_wal/
+pg_xact/
+postgresql.conf
+postmaster.pid

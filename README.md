@@ -16,7 +16,21 @@
 
  - ng new doing-tasks --standalone --routing --style=scss --skip-git
  
- - touch docker/backend.Dockerfile
- - touch docker/frontend.Dockerfile
- - touch docker-compose.yml
- - touch docker-compose.override.yml
+ -touch docker/backend.Dockerfile
+ -touch docker/frontend.Dockerfile
+ -touch docker-compose.yml
+ -touch docker-compose.override.yml
+
+
+ # Start all services
+ -docker-compose up
+
+# Start in background mode (most common for daily use)
+ -docker-compose up -d
+
+# View logs
+ -docker-compose logs -f
+
+# Stop and remove everything
+ -docker-compose down
+

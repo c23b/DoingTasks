@@ -10,4 +10,9 @@
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\DoingTasks.Application\DoingTasks.Application.csproj" />
+    <ProjectReference Include="..\DoingTasks.SharedKernel\DoingTasks.SharedKernel.csproj" />
+  </ItemGroup>
+
 </Project>
