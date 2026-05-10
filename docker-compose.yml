@@ -1,16 +1,21 @@
 services:
   api:
+    image: ${DOCKER_REGISTRY-}doingtasks.api
+    container_name: DoingTasks.Api
     build:
       context: .
       dockerfile: docker/backend.Dockerfile
     ports:
       - "5000:8080"
+      - "5001:8081"
     environment:
-      - ASPNETCORE_ENVIRONMENT=Production
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
     depends_on:
       - db
 
   web:
+    image: ${DOCKER_REGISTRY-}doingtasks.web
+    container_name: DoingTasks.Web
     build:
       context: .
       dockerfile: docker/frontend.Dockerfile
@@ -20,9 +25,13 @@ services:
       - api
 
   db:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    environment:
-      - ACCEPT_EULA=Y
-      - SA_PASSWORD=YourStrong@Password
+    image: postgres:16-alpine
+    container_name: DoingTasks.Db
+    volumes:
+      - ./.containers/database:/var/lib/postgresql/data
     ports:
-      - "1433:1433"
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: "db_doingtasks"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "Strong_password_123!"
