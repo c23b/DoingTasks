@@ -3,6 +3,13 @@ using DoingTasks.SharedKernel.Results;
 
 namespace DoingTasks.Domain.UnitTests;
 
+/// <summary>
+/// Unit tests for the <see cref="User.User"/> aggregate root.
+/// </summary>
+/// <remarks>
+/// Tests cover user creation and update operations, validating both success and failure scenarios
+/// with comprehensive error handling validation.
+/// </remarks>
 [Collection(nameof(UserCollection))]
 public class UserTest
 {
@@ -13,6 +20,13 @@ public class UserTest
         _userTestFixture = userTestFixture;
     }
 
+    /// <summary>
+    /// Tests successful creation of a user with valid parameters.
+    /// </summary>
+    /// <remarks>
+    /// Verifies that when creating a user with valid full name, email, nickname, and birth date,
+    /// the operation succeeds and returns a user object with all properties correctly set.
+    /// </remarks>
     [Fact(DisplayName = "User  - Create Success")]
     public void User_Create_Success()
     {
@@ -27,6 +41,13 @@ public class UserTest
         Assert.Equal(birthDate, resultUser.Value.BirthDate);
     }
 
+    /// <summary>
+    /// Tests user creation failure when full name is empty.
+    /// </summary>
+    /// <remarks>
+    /// Verifies that when creating a user with an empty full name, the operation fails
+    /// and returns the appropriate <see cref="UserErrors.FullNameRequired"/> error.
+    /// </remarks>
     [Fact(DisplayName = "User  - Create Error FullNameRequired")]
     public void User_Create_Error_FullNameRequired()
     {
@@ -42,8 +63,16 @@ public class UserTest
         Assert.Equal(UserErrors.FullNameRequired.Description, resultUser.Error.Description);
     }
 
+    /// <summary>
+    /// Tests user creation failure when email is invalid or empty.
+    /// </summary>
+    /// <remarks>
+    /// Verifies that when creating a user with an invalid email format or empty email,
+    /// the operation fails and returns the appropriate <see cref="UserErrors.EmailInvalid"/> error.
+    /// </remarks>
+    /// <param name="email">The invalid email to test (non-email format or empty string).</param>
     [Theory(DisplayName = "User  - Create Error EmailInvalid")]
-    [InlineData("fasdfasdfaasdf")]
+    [InlineData("invalid-email")]
     [InlineData("")]
     public void User_Create_Error_EmailInvalid(string email)
     {
@@ -56,6 +85,13 @@ public class UserTest
         Assert.Equal(UserErrors.EmailInvalid.Description, resultUser.Error.Description);
     }
 
+    /// <summary>
+    /// Tests user creation failure when birth date is invalid.
+    /// </summary>
+    /// <remarks>
+    /// Verifies that when creating a user with a birth date in the future (last year or later),
+    /// the operation fails and returns the appropriate <see cref="UserErrors.BirthDateInvalid"/> error.
+    /// </remarks>
     [Fact(DisplayName = "User  - Create Error BirthDateInvalid")]
     public void User_Create_Error_BirthDateInvalid()
     {
@@ -71,6 +107,13 @@ public class UserTest
         Assert.Equal(UserErrors.BirthDateInvalid.Description, resultUser.Error.Description);
     }
 
+    /// <summary>
+    /// Tests user creation failure when nickname is empty.
+    /// </summary>
+    /// <remarks>
+    /// Verifies that when creating a user with an empty nickname, the operation fails
+    /// and returns the appropriate <see cref="NicknameErrors.Required"/> error.
+    /// </remarks>
     [Fact(DisplayName = "User  - Create Error NicknameRequired")]
     public void User_Create_Error_NicknameRequired()
     {
@@ -83,6 +126,13 @@ public class UserTest
         Assert.Equal(NicknameErrors.Required.Description, resultUser.Error.Description);
     }
 
+    /// <summary>
+    /// Tests user creation failure when nickname exceeds maximum length.
+    /// </summary>
+    /// <remarks>
+    /// Verifies that when creating a user with a nickname that exceeds the maximum allowed length,
+    /// the operation fails and returns the appropriate <see cref="NicknameErrors.TooLong"/> error.
+    /// </remarks>
     [Fact(DisplayName = "User  - Create Error NicknameTooLong")]
     public void User_Create_Error_NicknameTooLong()
     {
@@ -98,6 +148,13 @@ public class UserTest
         Assert.Equal(NicknameErrors.TooLong.Description, resultUser.Error.Description);
     }
 
+    /// <summary>
+    /// Tests successful update of user properties.
+    /// </summary>
+    /// <remarks>
+    /// Verifies that when updating a user with valid full name, nickname, and birth date,
+    /// the operation succeeds and the user object is updated with the new values.
+    /// </remarks>
     [Fact(DisplayName = "User  - Update Success")]
     public void User_Update_Success()
     {
@@ -113,6 +170,13 @@ public class UserTest
         Assert.Equal(birthDate, user.BirthDate);
     }
 
+    /// <summary>
+    /// Tests user update failure when full name is empty.
+    /// </summary>
+    /// <remarks>
+    /// Verifies that when updating a user with an empty full name, the operation fails
+    /// and returns the appropriate <see cref="UserErrors.FullNameRequired"/> error.
+    /// </remarks>
     [Fact(DisplayName = "User  - Update Error FullNameRequired")]
     public void User_Update_Error_FullNameRequired()
     {
@@ -128,6 +192,13 @@ public class UserTest
         Assert.Equal(UserErrors.FullNameRequired.Description, resultUser.Error.Description);
     }
 
+    /// <summary>
+    /// Tests user update failure when nickname is empty.
+    /// </summary>
+    /// <remarks>
+    /// Verifies that when updating a user with an empty nickname, the operation fails
+    /// and returns the appropriate <see cref="NicknameErrors.Required"/> error.
+    /// </remarks>
     [Fact(DisplayName = "User  - Update Error NicknameRequired")]
     public void User_Update_Error_NicknameRequired()
     {
@@ -143,6 +214,13 @@ public class UserTest
         Assert.Equal(NicknameErrors.Required.Description, resultUser.Error.Description);
     }
 
+    /// <summary>
+    /// Tests user update failure when nickname exceeds maximum length.
+    /// </summary>
+    /// <remarks>
+    /// Verifies that when updating a user with a nickname that exceeds the maximum allowed length,
+    /// the operation fails and returns the appropriate <see cref="NicknameErrors.TooLong"/> error.
+    /// </remarks>
     [Fact(DisplayName = "User  - Update Error NicknameTooLong")]
     public void User_Update_Error_NicknameTooLong()
     {
@@ -160,6 +238,13 @@ public class UserTest
         Assert.Equal(NicknameErrors.TooLong.Description, resultUser.Error.Description);
     }
 
+    /// <summary>
+    /// Tests user update failure when birth date is invalid.
+    /// </summary>
+    /// <remarks>
+    /// Verifies that when updating a user with a birth date in the future (last year or later),
+    /// the operation fails and returns the appropriate <see cref="UserErrors.BirthDateInvalid"/> error.
+    /// </remarks>
     [Fact(DisplayName = "User  - Update Error BirthDateInvalid")]
     public void User_Update_Error_BirthDateInvalid()
     {
