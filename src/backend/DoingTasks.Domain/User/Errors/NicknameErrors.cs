@@ -2,7 +2,6 @@
 
 namespace DoingTasks.Domain.User;
 
-// Domain/Users/NicknameErrors.cs
 public static class NicknameErrors
 {
     public static readonly Error Required =

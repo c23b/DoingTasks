@@ -4,8 +4,6 @@ using DoingTasks.SharedKernel.Results;
 
 namespace DoingTasks.Domain.WorkSpace;
 
-// ─── WORKSPACE ───────────────────────────────────────────
-
 public sealed class WorkspaceState : Entity
 {
     public string Name { get; private set; }

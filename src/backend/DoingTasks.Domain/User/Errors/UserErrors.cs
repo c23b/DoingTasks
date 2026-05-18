@@ -2,14 +2,16 @@
 
 namespace DoingTasks.Domain.User;
 
-// Domain/Users/UserErrors.cs
 public static class UserErrors
 {
     public static readonly Error FullNameRequired =
         Error.Validation("User.FullNameRequired", "Full name is required");
 
-    public static readonly Error EmailRequired =
-        Error.Validation("User.EmailRequired", "Email is required");
+    public static readonly Error EmailInvalid =
+        Error.Validation("User.EmailRequired", "Email is invalid");
+
+    public static readonly Error BirthDateInvalid =
+        Error.Validation("User.BirthDateInvalid", "The user must have 18 year or more");
 
     public static readonly Error NotFound =
         Error.NotFound("User.NotFound", "User was not found");
