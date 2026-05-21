@@ -1,4 +1,5 @@
 ﻿using DoingTasks.SharedKernel.Domain;
+using DoingTasks.SharedKernel.Results;
 
 namespace DoingTasks.Domain.WorkSpace;
 
@@ -18,4 +19,10 @@ public sealed class WorkspaceMember : Entity
             Role = role,
             JoinedAt = DateTime.UtcNow
         };
+
+    internal Result ChangeRole(MemberRole newRole)
+    {
+        Role = newRole;
+        return Result.Success();
+    }
 }

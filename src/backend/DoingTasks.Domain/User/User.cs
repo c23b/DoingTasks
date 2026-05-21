@@ -109,7 +109,7 @@ public sealed class User : AggregateRoot
             Email = email
         };
 
-        //user.RaiseDomainEvent(new UserCreatedDomainEvent(user.Id));
+        user.RaiseDomainEvent(new UserCreatedDomainEvent(user.Id));
         return Result.Success(user);
     }
 

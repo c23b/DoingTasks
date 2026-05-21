@@ -1,6 +1,6 @@
 ﻿using DoingTasks.SharedKernel.Results;
 
-namespace DoingTasks.Domain.WorkSpace;
+namespace DoingTasks.Domain.Task;
 
 // Domain/Tasks/TaskErrors.cs
 public static class WorkTaskErrors

@@ -1,6 +1,6 @@
 ﻿using DoingTasks.SharedKernel.Results;
 
-namespace DoingTasks.Domain.WorkSpace.ValueObjects;
+namespace DoingTasks.Domain.WorkSpace;
 
 public sealed record StateOrder
 {

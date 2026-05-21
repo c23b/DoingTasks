@@ -10,4 +10,7 @@ public static class WorkspaceStateErrors
 
     public static readonly Error NotFound =
         Error.NotFound("WorkspaceState.NotFound", "Workspace state was not found");
+
+    public static readonly Error TheStateAlreadyInThisOrder =
+        Error.NotFound("WorkspaceState.TheStateAlreadyInThisOrder", "Workspace state already in this order");
 }

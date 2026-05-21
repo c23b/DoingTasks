@@ -24,7 +24,7 @@ public sealed class Workspace : AggregateRoot
 
     private Workspace() { }
 
-    public static Result<Workspace> Create(string name, Guid ownerId, string? groupName = null)
+    public static Result<Workspace> Create(Guid ownerId, string name, string? groupName = null, bool allowCollaboratorEditing = false)
     {
         if (string.IsNullOrWhiteSpace(name))
             return Result.Failure<Workspace>(WorkspaceErrors.NameRequired);
@@ -32,48 +32,40 @@ public sealed class Workspace : AggregateRoot
         var workspace = new Workspace
         {
             Id = Guid.NewGuid(),
+            OwnerId = ownerId,
             Name = name,
             GroupName = groupName,
-            OwnerId = ownerId,
-            AllowCollaboratorEditing = false
+            AllowCollaboratorEditing = allowCollaboratorEditing
         };
-
-        workspace._members.Add(WorkspaceMember.Create(ownerId, MemberRole.Owner));
+                
         workspace.RaiseDomainEvent(new WorkspaceCreatedDomainEvent(workspace.Id, ownerId));
 
         return Result.Success(workspace);
     }
-
-    public Result AddState(string name, int order)
+        
+    public Result RenameWorkspace(Guid requesterId, string name)
     {
-        // INVARIANTE: sem order duplicado
-        if (_states.Any(s => s.Order.Value == order))
-            return Result.Failure(WorkspaceErrors.DuplicateStateOrder);
+        if (requesterId != OwnerId)
+            return Result.Failure(WorkspaceErrors.OnlyOwnerCanUpdate);
 
-        // INVARIANTE: sequência sem gaps
-        var maxOrder = _states.Any() ? _states.Max(s => s.Order.Value) : 0;
-        if (order != maxOrder + 1)
-            return Result.Failure(WorkspaceErrors.StateOrderGap);
+        if (string.IsNullOrWhiteSpace(name))
+            return Result.Failure<Workspace>(WorkspaceErrors.NameRequired);
 
-        var stateResult = WorkspaceState.Create(name, order);
-        if (stateResult.IsFailure)
-            return Result.Failure(stateResult.Error);
+        Name = name;
 
-        _states.Add(stateResult.Value);
-        RaiseDomainEvent(new WorkspaceStateAddedDomainEvent(Id, stateResult.Value.Id));
         return Result.Success();
     }
 
-    public Result InviteMember(Guid userId, Guid requesterId)
+    public Result RegroupWorkspace(Guid requesterId, string groupName)
     {
         if (requesterId != OwnerId)
-            return Result.Failure(WorkspaceErrors.OnlyOwnerCanInvite);
+            return Result.Failure(WorkspaceErrors.OnlyOwnerCanUpdate);
 
-        if (_members.Any(m => m.UserId == userId))
-            return Result.Failure(WorkspaceErrors.AlreadyMember);
+        if (string.IsNullOrWhiteSpace(groupName))
+            return Result.Failure<Workspace>(WorkspaceErrors.GroupNameRequired);
 
-        _members.Add(WorkspaceMember.Create(userId, MemberRole.Collaborator));
-        RaiseDomainEvent(new MemberInvitedDomainEvent(Id, userId));
+        GroupName = groupName;
+
         return Result.Success();
     }
 
@@ -86,6 +78,96 @@ public sealed class Workspace : AggregateRoot
         return Result.Success();
     }
 
+    public Result AddState(Guid requesterId, string name, int order, bool reorder = false)
+    {
+        if (requesterId != OwnerId)
+            return Result.Failure(WorkspaceErrors.OnlyOwnerCanAddStates);
+
+        // INVARIANTE: sem order duplicado
+        if (reorder is false && _states.Any(s => s.Order.Value == order))
+            return Result.Failure(WorkspaceErrors.DuplicateStateOrder);
+
+        // INVARIANTE: sequência sem gaps
+        var maxOrder = _states.Any() ? _states.Max(s => s.Order.Value) : 0;
+        if (reorder is false && order != maxOrder + 1)
+            return Result.Failure(WorkspaceErrors.StateOrderGap);
+
+        var stateResult = WorkspaceState.Create(name, order);
+        if (stateResult.IsFailure)
+            return Result.Failure(stateResult.Error);
+
+        if (reorder)
+            Reorder(requesterId, stateResult.Value);
+
+        _states.Add(stateResult.Value);
+        RaiseDomainEvent(new WorkspaceStateAddedDomainEvent(Id, stateResult.Value.Id));
+        return Result.Success();
+    }
+
+    public Result Reorder(Guid requesterId, Guid stateId, int newOrder)
+    {
+        if (requesterId != OwnerId)
+            return Result.Failure(WorkspaceErrors.OnlyOwnerCanReorderStates);
+
+        var state = _states.SingleOrDefault(s => s.Id == stateId);
+        if (state is null)
+            return Result.Failure(WorkspaceStateErrors.NotFound);
+
+        if (state.Order.Value == newOrder)
+            return Result.Failure(WorkspaceStateErrors.TheStateAlreadyInThisOrder);
+
+        var reorderResult = state.Reorder(newOrder);
+        if (reorderResult.IsFailure)
+            return Result.Failure(reorderResult.Error);
+
+        Reorder(requesterId, state);
+
+        return Result.Success();
+    }
+
+    private void Reorder(Guid requesterId, WorkspaceState workspaceState)
+    {
+        foreach(var state in _states.Where(s => s.Id != workspaceState.Id && s.Order.Value >= workspaceState.Order.Value))
+                state.Reorder(state.Order.Value + 1);
+    }
+
+    public Result RenameState(Guid requesterId, Guid stateId, string name)
+    {
+        if (requesterId != OwnerId)
+            return Result.Failure(WorkspaceErrors.OnlyOwnerCanConfigure);
+
+        var state = _states.SingleOrDefault(s => s.Id == stateId);
+        if (state is null)
+            return Result.Failure(WorkspaceStateErrors.NotFound);
+
+        return state.Rename(name);
+    }
+
+    public Result InviteMember(Guid userId, Guid requesterId, MemberRole memberRole)
+    {
+        if (requesterId != OwnerId)
+            return Result.Failure(WorkspaceErrors.OnlyOwnerCanInvite);
+
+        if (_members.Any(m => m.UserId == userId))
+            return Result.Failure(WorkspaceErrors.AlreadyMember);
+
+        _members.Add(WorkspaceMember.Create(userId, memberRole));
+        RaiseDomainEvent(new MemberInvitedDomainEvent(Id, userId));
+        return Result.Success();
+    }
+    public Result ChangeRole(Guid userId, Guid requesterId, MemberRole newRole)
+    {
+        if (requesterId != OwnerId)
+            return Result.Failure(WorkspaceErrors.OnlyOwnerCanChangeRole);
+
+        var member = _members.SingleOrDefault(m => m.UserId == userId);
+        if (member is null)
+            return Result.Failure(WorkspaceErrors.NotMember);
+
+        return member.ChangeRole(newRole);
+    }
+
     public bool HasState(Guid stateId) => _states.Any(s => s.Id == stateId);
+
     public bool IsMember(Guid userId) => _members.Any(m => m.UserId == userId);
 }

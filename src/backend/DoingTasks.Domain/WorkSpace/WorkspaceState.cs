@@ -27,4 +27,24 @@ public sealed class WorkspaceState : Entity
             Order = orderResult.Value
         });
     }
+
+    internal Result Reorder(int order)
+    {
+        var newOrderResult = StateOrder.Create(order);
+        if (newOrderResult.IsFailure)
+            return Result.Failure<WorkspaceState>(newOrderResult.Error);
+
+        Order = newOrderResult.Value;
+        return Result.Success();
+    }
+
+    internal Result Rename(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return Result.Failure<WorkspaceState>(WorkspaceStateErrors.NameRequired);
+
+        Name = name;
+
+        return Result.Success();
+    }
 }
