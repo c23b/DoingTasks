@@ -8,5 +8,11 @@ public enum AuditAction
     TaskUnblocked,
     StepCompleted,
     MemberInvited,
-    WorkspaceStateAdded
+    WorkspaceStateAdded,
+    WorkspaceRenamed,
+    WorkspaceRegrouped,
+    CollaboratorEditingToggled,
+    WorkspaceStateReordered,
+    WorkspaceStateRenamed,
+    MemberRoleChanged
 }

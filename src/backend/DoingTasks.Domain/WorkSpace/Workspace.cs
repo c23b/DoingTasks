@@ -52,6 +52,7 @@ public sealed class Workspace : AggregateRoot
             return Result.Failure<Workspace>(WorkspaceErrors.NameRequired);
 
         Name = name;
+        RaiseDomainEvent(new WorkspaceRenamedDomainEvent(Id, name));
 
         return Result.Success();
     }
@@ -65,6 +66,7 @@ public sealed class Workspace : AggregateRoot
             return Result.Failure<Workspace>(WorkspaceErrors.GroupNameRequired);
 
         GroupName = groupName;
+        RaiseDomainEvent(new WorkspaceRegroupedDomainEvent(Id, groupName));
 
         return Result.Success();
     }
@@ -75,6 +77,7 @@ public sealed class Workspace : AggregateRoot
             return Result.Failure(WorkspaceErrors.OnlyOwnerCanConfigure);
 
         AllowCollaboratorEditing = !AllowCollaboratorEditing;
+        RaiseDomainEvent(new CollaboratorEditingToggledDomainEvent(Id, AllowCollaboratorEditing));
         return Result.Success();
     }
 
@@ -121,6 +124,7 @@ public sealed class Workspace : AggregateRoot
             return Result.Failure(reorderResult.Error);
 
         Reorder(requesterId, state);
+        RaiseDomainEvent(new WorkspaceStateReorderedDomainEvent(Id, stateId, newOrder));
 
         return Result.Success();
     }
@@ -140,7 +144,11 @@ public sealed class Workspace : AggregateRoot
         if (state is null)
             return Result.Failure(WorkspaceStateErrors.NotFound);
 
-        return state.Rename(name);
+        var renameResult = state.Rename(name);
+        if (renameResult.IsSuccess)
+            RaiseDomainEvent(new WorkspaceStateRenamedDomainEvent(Id, stateId, name));
+
+        return renameResult;
     }
 
     public Result InviteMember(Guid userId, Guid requesterId, MemberRole memberRole)
@@ -164,7 +172,11 @@ public sealed class Workspace : AggregateRoot
         if (member is null)
             return Result.Failure(WorkspaceErrors.NotMember);
 
-        return member.ChangeRole(newRole);
+        var changeRoleResult = member.ChangeRole(newRole);
+        if (changeRoleResult.IsSuccess)
+            RaiseDomainEvent(new MemberRoleChangedDomainEvent(Id, userId, newRole));
+
+        return changeRoleResult;
     }
 
     public bool HasState(Guid stateId) => _states.Any(s => s.Id == stateId);
