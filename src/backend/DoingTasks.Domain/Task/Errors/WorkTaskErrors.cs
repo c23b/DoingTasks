@@ -19,4 +19,14 @@ public static class WorkTaskErrors
 
     public static readonly Error NotFound =
         Error.NotFound("Task.NotFound", "Task was not found");
+
+    public static readonly Error AlreadyBlocked =
+        Error.NotFound("Task.AlreadyBlocked", "Task is already blocked");
+
+    public static readonly Error AlreadyUnblocked =
+        Error.NotFound("Task.AlreadyUnblocked", "Task is already unblocked");
+
+    public static readonly Error DescriptionRequired =
+        Error.Validation("Task.DescriptionRequired", "Description is required");
+
 }

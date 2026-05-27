@@ -10,14 +10,12 @@ public sealed class WorkTask : AggregateRoot
     public string? Description { get; private set; }
     public Guid WorkspaceId { get; private set; }
     public Guid CurrentStateId { get; private set; }
-    public Guid? GroupId { get; private set; }           // agrupador interno de tasks
     public Complexity Complexity { get; private set; }
     public int? PlannedHours { get; private set; }
     public int ActualHours { get; private set; }
     public bool IsBlocked { get; private set; }
     public string? BlockJustification { get; private set; }
-    public Guid? AssignedTo { get; private set; }
-    public DateTime CreatedAt { get; private set; }
+    public Guid? AssignedUserId { get; private set; }
 
     private readonly List<Step> _steps = new();
     private readonly List<TaskComment> _comments = new();
@@ -34,9 +32,10 @@ public sealed class WorkTask : AggregateRoot
         string title,
         Guid workspaceId,
         Guid initialStateId,
-        int? complexity = null,
+        string? description = null,
         int? plannedHours = null,
-        Guid? groupId = null)
+        Guid? assignedUserId = null,
+        int? complexity = null)
     {
         if (string.IsNullOrWhiteSpace(title))
             return Result.Failure<WorkTask>(WorkTaskErrors.TitleRequired);
@@ -47,22 +46,43 @@ public sealed class WorkTask : AggregateRoot
 
         var task = new WorkTask
         {
-            Id = Guid.NewGuid(),
             Title = title,
             WorkspaceId = workspaceId,
             CurrentStateId = initialStateId,
+            Description = description,
             Complexity = complexityResult.Value,
             PlannedHours = plannedHours,
             ActualHours = 0,
-            GroupId = groupId,
-            CreatedAt = DateTime.UtcNow
+            AssignedUserId = assignedUserId
         };
 
         task.RaiseDomainEvent(new TaskCreatedDomainEvent(task.Id, workspaceId, initialStateId));
         return Result.Success(task);
     }
 
-    public Result TransitionTo(Guid newStateId)
+    public Result Retitle(string title)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+            return Result.Failure<Workspace>(WorkTaskErrors.TitleRequired);
+
+        Title = title;
+        RaiseDomainEvent(new TaskRetitledDomainEvent(Id, title));
+
+        return Result.Success();
+    }
+
+    public Result UpdateDescription(string description)
+    {
+        if (string.IsNullOrWhiteSpace(description))
+            return Result.Failure<Workspace>(WorkTaskErrors.DescriptionRequired);
+
+        Description = description;
+        RaiseDomainEvent(new TaskRetitledDomainEvent(Id, description));
+
+        return Result.Success();
+    }
+
+    public Result TransitionToState(Guid newStateId)
     {
         if (IsBlocked)
             return Result.Failure(WorkTaskErrors.TaskIsBlocked);
@@ -76,6 +96,9 @@ public sealed class WorkTask : AggregateRoot
 
     public Result Block(string justification)
     {
+        if (IsBlocked is true)
+            return Result.Failure(WorkTaskErrors.AlreadyBlocked);
+
         if (string.IsNullOrWhiteSpace(justification))
             return Result.Failure(WorkTaskErrors.BlockJustificationRequired);
 
@@ -87,6 +110,9 @@ public sealed class WorkTask : AggregateRoot
 
     public Result Unblock()
     {
+        if (IsBlocked is false)
+            return Result.Failure(WorkTaskErrors.AlreadyUnblocked);
+
         IsBlocked = false;
         BlockJustification = null;
         RaiseDomainEvent(new TaskUnblockedDomainEvent(Id, WorkspaceId));
@@ -103,12 +129,48 @@ public sealed class WorkTask : AggregateRoot
         return Result.Success();
     }
 
-    public Result AddStep(string title, Guid workspaceStateId)
+    public Result UpdateComplexity(int? complexity)
     {
-        if (string.IsNullOrWhiteSpace(title))
-            return Result.Failure(StepErrors.TitleRequired);
+        var complexityResult = Complexity.Create(complexity);
 
-        _steps.Add(Step.Create(title, workspaceStateId));
+        if (complexityResult.IsFailure)
+            return Result.Failure(complexityResult.Error);
+
+        Complexity = complexityResult.Value;
+
+        return Result.Success();
+    }
+
+    public Result UpdatePlannedHours(int? hours)
+    {
+        PlannedHours = hours;
+        return Result.Success();
+    }
+
+    public Result Assign(Guid userId)
+    {
+        AssignedUserId = userId;
+        return Result.Success();
+    }
+
+    public Result AddStep(string title, Guid workspaceStateId, Guid? assignedUserId = null)
+    {
+        var stepResult = Step.Create(title, this.Id, workspaceStateId, assignedUserId);
+        if (stepResult.IsFailure)
+            return Result.Failure(stepResult.Error);
+
+        _steps.Add(stepResult.Value);
+        return Result.Success();
+    }
+
+    public Result RemoveStep(Guid stepId)
+    {
+        var step = _steps.FirstOrDefault(s => s.Id == stepId);
+        
+        if (step is null)
+            return Result.Failure(StepErrors.NotFound);
+
+        _steps.Remove(step);
         return Result.Success();
     }
 
@@ -134,8 +196,35 @@ public sealed class WorkTask : AggregateRoot
         // Atualiza horas da task automaticamente após step concluído
         ActualHours = TotalStepHours;
 
-        RaiseDomainEvent(new StepCompletedDomainEvent(Id, stepId, hoursSpent));
+        RaiseDomainEvent(new StepCompletedDomainEvent(WorkspaceId, Id, stepId, hoursSpent));
         return Result.Success();
+    }
+
+    public Result AssignStep(Guid stepId, Guid userId)
+    {
+        var step = _steps.FirstOrDefault(s => s.Id == stepId);
+        if (step is null)
+            return Result.Failure(StepErrors.NotFound);
+                
+        return step.Assign(userId);
+    }
+
+    public Result UpdateWorkspaceStateOfStep(Guid stepId, Guid workspaceStateId)
+    {
+        var step = _steps.FirstOrDefault(s => s.Id == stepId);
+        if (step is null)
+            return Result.Failure(StepErrors.NotFound);
+
+        return step.UpdateWorkspaceState(workspaceStateId);
+    }
+
+    public Result RetitleStep(Guid stepId, string title)
+    {
+        var step = _steps.FirstOrDefault(s => s.Id == stepId);
+        if (step is null)
+            return Result.Failure(StepErrors.NotFound);
+
+        return step.Retitle(title);
     }
 
     public Result AddComment(string content, Guid authorId)
@@ -148,9 +237,23 @@ public sealed class WorkTask : AggregateRoot
         return Result.Success();
     }
 
-    public Result Assign(Guid userId)
+    public Result UpdateComment(Guid taskCommentId, string content)
     {
-        AssignedTo = userId;
+        var comment = _comments.FirstOrDefault(s => s.Id == taskCommentId);
+        if (comment is null)
+            return Result.Failure(TaskCommentErrors.NotFound);
+
+        return comment.Update(content);
+    }
+
+    public Result RemoveComment(Guid taskCommentId, string content)
+    {
+        var comment = _comments.FirstOrDefault(s => s.Id == taskCommentId);
+        if (comment is null)
+            return Result.Failure(TaskCommentErrors.NotFound);
+
+        _comments.Remove(comment);
+
         return Result.Success();
     }
 }

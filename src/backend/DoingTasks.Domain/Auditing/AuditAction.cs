@@ -2,17 +2,20 @@
 
 public enum AuditAction
 {
+    UserCreated,
+    UserUpdated,
+    WorkspaceCreated,
+    WorkspaceRenamed,
+    WorkspaceCollaboratorEditingToggled,
+    WorkspaceRegrouped,
+    WorkspaceStateReordered,
+    WorkspaceStateAdded,
+    WorkspaceStateRenamed,
+    MemberInvited,
+    MemberRoleChanged,
     TaskCreated,
     TaskStateTransitioned,
     TaskBlocked,
     TaskUnblocked,
-    StepCompleted,
-    MemberInvited,
-    WorkspaceStateAdded,
-    WorkspaceRenamed,
-    WorkspaceRegrouped,
-    CollaboratorEditingToggled,
-    WorkspaceStateReordered,
-    WorkspaceStateRenamed,
-    MemberRoleChanged
+    StepCompleted
 }

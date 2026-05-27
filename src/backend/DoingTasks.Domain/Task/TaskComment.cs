@@ -18,10 +18,19 @@ public sealed class TaskComment : Entity
 
         return Result.Success(new TaskComment
         {
-            Id = Guid.NewGuid(),
             Content = content,
             AuthorId = authorId,
             CreatedAt = DateTime.UtcNow
         });
+    }
+
+    internal Result Update(string content)
+    {
+        if (string.IsNullOrWhiteSpace(content))
+            return Result.Failure<TaskComment>(TaskCommentErrors.ContentRequired);
+
+        Content = content;
+
+       return Result.Success();
     }
 }

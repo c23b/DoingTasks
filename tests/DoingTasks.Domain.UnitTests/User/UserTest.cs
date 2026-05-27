@@ -35,6 +35,7 @@ public class UserTest
 
         Assert.NotNull(resultUser);
         Assert.True(resultUser.IsSuccess);
+        Assert.NotEqual(Guid.Empty, resultUser.Value.Id);
         Assert.Equal("Person Silva", resultUser.Value.FullName);
         Assert.Equal("person@test.com", resultUser.Value.Email);
         Assert.Equal("Person", resultUser.Value.Nickname.Value);

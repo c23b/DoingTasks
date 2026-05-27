@@ -14,7 +14,6 @@ public sealed class WorkspaceMember : Entity
     internal static WorkspaceMember Create(Guid userId, MemberRole role) =>
         new()
         {
-            Id = Guid.NewGuid(),
             UserId = userId,
             Role = role,
             JoinedAt = DateTime.UtcNow

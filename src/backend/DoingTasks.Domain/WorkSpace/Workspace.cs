@@ -24,14 +24,17 @@ public sealed class Workspace : AggregateRoot
 
     private Workspace() { }
 
-    public static Result<Workspace> Create(Guid ownerId, string name, string? groupName = null, bool allowCollaboratorEditing = false)
+    public static Result<Workspace> Create(
+        Guid ownerId, 
+        string name, 
+        string? groupName = null, 
+        bool allowCollaboratorEditing = false)
     {
         if (string.IsNullOrWhiteSpace(name))
             return Result.Failure<Workspace>(WorkspaceErrors.NameRequired);
 
         var workspace = new Workspace
         {
-            Id = Guid.NewGuid(),
             OwnerId = ownerId,
             Name = name,
             GroupName = groupName,
@@ -43,7 +46,7 @@ public sealed class Workspace : AggregateRoot
         return Result.Success(workspace);
     }
         
-    public Result RenameWorkspace(Guid requesterId, string name)
+    public Result Rename(Guid requesterId, string name)
     {
         if (requesterId != OwnerId)
             return Result.Failure(WorkspaceErrors.OnlyOwnerCanUpdate);
@@ -57,7 +60,7 @@ public sealed class Workspace : AggregateRoot
         return Result.Success();
     }
 
-    public Result RegroupWorkspace(Guid requesterId, string groupName)
+    public Result Regroup(Guid requesterId, string groupName)
     {
         if (requesterId != OwnerId)
             return Result.Failure(WorkspaceErrors.OnlyOwnerCanUpdate);
@@ -81,14 +84,12 @@ public sealed class Workspace : AggregateRoot
         return Result.Success();
     }
 
-    public Result AddState(Guid requesterId, string name, int order, bool reorder = false)
+    public Result AddState(Guid requesterId, string name, int order)
     {
         if (requesterId != OwnerId)
             return Result.Failure(WorkspaceErrors.OnlyOwnerCanAddStates);
 
-        // INVARIANTE: sem order duplicado
-        if (reorder is false && _states.Any(s => s.Order.Value == order))
-            return Result.Failure(WorkspaceErrors.DuplicateStateOrder);
+        bool reorder = _states.Any() ? _states.Any(s => s.Order.Value == order) : false;
 
         // INVARIANTE: sequência sem gaps
         var maxOrder = _states.Any() ? _states.Max(s => s.Order.Value) : 0;
@@ -104,6 +105,28 @@ public sealed class Workspace : AggregateRoot
 
         _states.Add(stateResult.Value);
         RaiseDomainEvent(new WorkspaceStateAddedDomainEvent(Id, stateResult.Value.Id));
+        return Result.Success();
+    }
+
+    public Result RemoveState(Guid requesterId, Guid stateId)
+    {
+        if (requesterId != OwnerId)
+            return Result.Failure(WorkspaceErrors.OnlyOwnerCanAddStates);
+
+        var state = _states.SingleOrDefault(s => s.Id == stateId);
+
+        if (state is null)
+            return Result.Failure(WorkspaceStateErrors.NotFound);
+
+        var maxOrder = _states.Any() ? _states.Max(s => s.Order.Value) : 0;
+        bool reorder = state.Order.Value != maxOrder;
+        
+        _states.Remove(state);
+
+        if (reorder)
+            Reorder(requesterId, state, true);
+
+        RaiseDomainEvent(new WorkspaceStateRemovedDomainEvent(Id, state.Id));
         return Result.Success();
     }
 
@@ -129,10 +152,16 @@ public sealed class Workspace : AggregateRoot
         return Result.Success();
     }
 
-    private void Reorder(Guid requesterId, WorkspaceState workspaceState)
+    private void Reorder(
+        Guid requesterId, 
+        WorkspaceState workspaceState, 
+        bool isReorderAfterRemoval = false)
     {
-        foreach(var state in _states.Where(s => s.Id != workspaceState.Id && s.Order.Value >= workspaceState.Order.Value))
-                state.Reorder(state.Order.Value + 1);
+        int increase = isReorderAfterRemoval is true ? -1 : 1;
+                
+        foreach (var state in _states.Where(s => s.Id != workspaceState.Id 
+                                              && s.Order.Value >= workspaceState.Order.Value))
+                state.Reorder(state.Order.Value + increase);
     }
 
     public Result RenameState(Guid requesterId, Guid stateId, string name)
@@ -163,7 +192,8 @@ public sealed class Workspace : AggregateRoot
         RaiseDomainEvent(new MemberInvitedDomainEvent(Id, userId));
         return Result.Success();
     }
-    public Result ChangeRole(Guid userId, Guid requesterId, MemberRole newRole)
+
+    public Result ChangeRoleOfMember(Guid userId, Guid requesterId, MemberRole newRole)
     {
         if (requesterId != OwnerId)
             return Result.Failure(WorkspaceErrors.OnlyOwnerCanChangeRole);
@@ -177,6 +207,20 @@ public sealed class Workspace : AggregateRoot
             RaiseDomainEvent(new MemberRoleChangedDomainEvent(Id, userId, newRole));
 
         return changeRoleResult;
+    }
+
+    public Result RemoveMember(Guid userId, Guid requesterId)
+    {
+        if (requesterId != OwnerId)
+            return Result.Failure(WorkspaceErrors.OnlyOwnerCanChangeRole);
+
+        var member = _members.SingleOrDefault(m => m.UserId == userId);
+        if (member is null)
+            return Result.Failure(WorkspaceErrors.NotMember);
+
+        _members.Remove(member);
+
+        return Result.Success();
     }
 
     public bool HasState(Guid stateId) => _states.Any(s => s.Id == stateId);

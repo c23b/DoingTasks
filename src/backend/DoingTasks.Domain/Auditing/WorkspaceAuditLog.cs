@@ -3,8 +3,6 @@ using System.Text.Json;
 
 namespace DoingTasks.Domain.Auditing;
 
-// ─── AUDIT LOG ───────────────────────────────────────────
-
 public sealed class WorkspaceAuditLog : Entity
 {
     public Guid WorkspaceId { get; private set; }
@@ -26,7 +24,6 @@ public sealed class WorkspaceAuditLog : Entity
         object payload) =>
         new()
         {
-            Id = Guid.NewGuid(),
             WorkspaceId = workspaceId,
             TaskId = taskId,
             ActorId = actorId,
