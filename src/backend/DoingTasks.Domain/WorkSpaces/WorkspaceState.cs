@@ -10,20 +10,16 @@ public sealed class WorkspaceState : Entity
 
     private WorkspaceState() { }
 
-    internal static Result<WorkspaceState> Create(string name, int order)
+    internal static Result<WorkspaceState> Create(string name, StateOrder stateOrder)
     {
         if (string.IsNullOrWhiteSpace(name))
-            return Result.Failure<WorkspaceState>(WorkspaceStateErrors.NameRequired);
-
-        var orderResult = StateOrder.Create(order);
-        if (orderResult.IsFailure)
-            return Result.Failure<WorkspaceState>(orderResult.Error);
+            return Result.Failure<WorkspaceState>(WorkspaceStateErrors.NameRequired);               
 
         return Result.Success(new WorkspaceState
         {
             Id = Guid.NewGuid(),
             Name = name,
-            Order = orderResult.Value
+            Order = stateOrder
         });
     }
 

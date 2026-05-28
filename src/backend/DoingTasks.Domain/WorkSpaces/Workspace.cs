@@ -89,6 +89,10 @@ public sealed class Workspace : AggregateRoot
         if (requesterId != OwnerId)
             return Result.Failure(WorkspaceErrors.OnlyOwnerCanAddStates);
 
+        var orderResult = StateOrder.Create(order);
+        if (orderResult.IsFailure)
+            return Result.Failure<WorkspaceState>(orderResult.Error);
+
         bool reorder = _states.Any() ? _states.Any(s => s.Order.Value == order) : false;
 
         // INVARIANTE: sequência sem gaps
@@ -96,7 +100,7 @@ public sealed class Workspace : AggregateRoot
         if (reorder is false && order != maxOrder + 1)
             return Result.Failure(WorkspaceErrors.StateOrderGap);
 
-        var stateResult = WorkspaceState.Create(name, order);
+        var stateResult = WorkspaceState.Create(name, orderResult.Value);
         if (stateResult.IsFailure)
             return Result.Failure(stateResult.Error);
 
@@ -118,7 +122,7 @@ public sealed class Workspace : AggregateRoot
         if (state is null)
             return Result.Failure(WorkspaceStateErrors.NotFound);
 
-        var maxOrder = _states.Any() ? _states.Max(s => s.Order.Value) : 0;
+        var maxOrder = _states.Max(s => s.Order.Value);
         bool reorder = state.Order.Value != maxOrder;
         
         _states.Remove(state);
@@ -126,7 +130,7 @@ public sealed class Workspace : AggregateRoot
         if (reorder)
             Reorder(requesterId, state, true);
 
-        RaiseDomainEvent(new WorkspaceStateRemovedDomainEvent(Id, state.Id));
+        RaiseDomainEvent(new WorkspaceStateRemovedDomainEvent(this.Id, state.Id));
         return Result.Success();
     }
 
@@ -147,7 +151,7 @@ public sealed class Workspace : AggregateRoot
             return Result.Failure(reorderResult.Error);
 
         Reorder(requesterId, state);
-        RaiseDomainEvent(new WorkspaceStateReorderedDomainEvent(Id, stateId, newOrder));
+        RaiseDomainEvent(new WorkspaceStateReorderedDomainEvent(this.Id, stateId, newOrder));
 
         return Result.Success();
     }
