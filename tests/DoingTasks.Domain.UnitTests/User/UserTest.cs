@@ -1,5 +1,4 @@
-﻿using DoingTasks.Domain.User;
-using DoingTasks.SharedKernel.Results;
+﻿using DoingTasks.Domain.Users;
 
 namespace DoingTasks.Domain.UnitTests;
 
@@ -31,7 +30,7 @@ public class UserTest
     public void User_Create_Success()
     {
         var birthDate = new DateOnly(1990, 01, 01);
-        var resultUser = User.User.Create("Person Silva", "person@test.com", "Person", birthDate);
+        var resultUser = User.Create("Person Silva", "person@test.com", "Person", birthDate);
 
         Assert.NotNull(resultUser);
         Assert.True(resultUser.IsSuccess);
@@ -52,10 +51,11 @@ public class UserTest
     [Fact(DisplayName = "User  - Create Error FullNameRequired")]
     public void User_Create_Error_FullNameRequired()
     {
-        var resultUser = User.User.Create(string.Empty, 
-                                          "person@test.com", 
-                                          "Person", 
-                                          new DateOnly(1990, 01, 01));
+        var resultUser = User.Create(
+            string.Empty, 
+            "person@test.com", 
+            "Person", 
+            new DateOnly(1990, 01, 01));
 
         Assert.NotNull(resultUser);
         Assert.True(resultUser.IsFailure);
@@ -77,7 +77,7 @@ public class UserTest
     [InlineData("")]
     public void User_Create_Error_EmailInvalid(string email)
     {
-        var resultUser = User.User.Create("Person Silva", email, "Person", new DateOnly(1990, 01, 01));
+        var resultUser = User.Create("Person Silva", email, "Person", new DateOnly(1990, 01, 01));
 
         Assert.NotNull(resultUser);
         Assert.True(resultUser.IsFailure);
@@ -96,10 +96,11 @@ public class UserTest
     [Fact(DisplayName = "User  - Create Error BirthDateInvalid")]
     public void User_Create_Error_BirthDateInvalid()
     {
-        var resultUser = User.User.Create("Person Silva", 
-                                          "person@test.com", 
-                                          "Person", 
-                                          new DateOnly((DateTime.UtcNow.Year - 1), 01, 01));
+        var resultUser = User.Create(
+            "Person Silva", 
+            "person@test.com", 
+            "Person", 
+            new DateOnly((DateTime.UtcNow.Year - 1), 01, 01));
 
         Assert.NotNull(resultUser);
         Assert.True(resultUser.IsFailure);
@@ -118,7 +119,11 @@ public class UserTest
     [Fact(DisplayName = "User  - Create Error NicknameRequired")]
     public void User_Create_Error_NicknameRequired()
     {
-        var resultUser = User.User.Create("Person Silva", "person@test.com", "", new DateOnly(1990, 01, 01));
+        var resultUser = User.Create(
+            "Person Silva", 
+            "person@test.com", 
+            "", 
+            new DateOnly(1990, 01, 01));
 
         Assert.NotNull(resultUser);
         Assert.True(resultUser.IsFailure);
@@ -137,10 +142,11 @@ public class UserTest
     [Fact(DisplayName = "User  - Create Error NicknameTooLong")]
     public void User_Create_Error_NicknameTooLong()
     {
-        var resultUser = User.User.Create("Person Silva", 
-                                          "person@test.com",
-                                          "Error Nickname TooLong Error Nickname TooLong Error Nickname TooLong", 
-                                          new DateOnly(1990, 01, 01));
+        var resultUser = User.Create(
+            "Person Silva", 
+            "person@test.com",
+            "Error Nickname TooLong Error Nickname TooLong Error Nickname TooLong", 
+            new DateOnly(1990, 01, 01));
 
         Assert.NotNull(resultUser);
         Assert.True(resultUser.IsFailure);
@@ -228,9 +234,10 @@ public class UserTest
         var user = _userTestFixture.GenerateUser();
 
         var birthDate = new DateOnly(1992, 02, 02);
-        var resultUser = user.Update("Updated",
-                                     "Update Error NicknameTooLong Update Error NicknameTooLong", 
-                                     birthDate);
+        var resultUser = user.Update(
+            "Updated",
+            "Update Error NicknameTooLong Update Error NicknameTooLong", 
+            birthDate);
 
         Assert.NotNull(resultUser);
         Assert.True(resultUser.IsFailure);
@@ -252,9 +259,10 @@ public class UserTest
         var user = _userTestFixture.GenerateUser();
 
         var birthDate = new DateOnly((DateTime.UtcNow.Year - 1), 01, 01);
-        var resultUser = user.Update("Person Updated",
-                                     "Update",
-                                     birthDate);
+        var resultUser = user.Update(
+            "Person Updated",
+            "Update",
+            birthDate);
 
         Assert.NotNull(resultUser);
         Assert.True(resultUser.IsFailure);
