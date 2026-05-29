@@ -643,6 +643,34 @@ public class WorkTaskTest
     }
 
     /// <summary>
+    /// Tests set step doing failure when task is not in the corresponding state.
+    /// </summary>
+    /// <remarks>
+    /// Verifies that a step cannot be marked as doing if the task is not in the corresponding workspace state.
+    /// </remarks>
+    [Fact(DisplayName = "WorkTask - SetStepDoing Error StateNotMatching")]
+    public void WorkTask_SetStepDoing_Error_StateNotMatching()
+    {
+        var task = _workTaskTestFixture.GenerateWorkTask();
+        var stepStateId = Guid.NewGuid();
+        var differentStateId = Guid.NewGuid();
+        
+        // Add step with one state
+        task.AddStep("Step 1", stepStateId);
+        var stepId = task.Steps.First().Id;
+        
+        // Transition task to a different state
+        task.TransitionToState(differentStateId);
+
+        var result = task.SetStepDoing(stepId);
+
+        Assert.NotNull(result);
+        Assert.True(result.IsFailure);
+        Assert.Equal(StepErrors.StateNotMatching.Code, result.Error.Code);
+        Assert.Equal(StepErrors.StateNotMatching.Description, result.Error.Description);
+    }
+
+    /// <summary>
     /// Tests setting a step to done.
     /// </summary>
     /// <remarks>
@@ -704,6 +732,34 @@ public class WorkTaskTest
         Assert.True(result.IsFailure);
         Assert.Equal(StepErrors.InvalidHours.Code, result.Error.Code);
         Assert.Equal(StepErrors.InvalidHours.Description, result.Error.Description);
+    }
+
+    /// <summary>
+    /// Tests set step done failure when task is not in the corresponding state.
+    /// </summary>
+    /// <remarks>
+    /// Verifies that a step cannot be marked as done if the task is not in the corresponding workspace state.
+    /// </remarks>
+    [Fact(DisplayName = "WorkTask - SetStepDone Error StateNotMatching")]
+    public void WorkTask_SetStepDone_Error_StateNotMatching()
+    {
+        var task = _workTaskTestFixture.GenerateWorkTask();
+        var stepStateId = Guid.NewGuid();
+        var differentStateId = Guid.NewGuid();
+        
+        // Add step with one state
+        task.AddStep("Step 1", stepStateId);
+        var stepId = task.Steps.First().Id;
+        
+        // Transition task to a different state
+        task.TransitionToState(differentStateId);
+
+        var result = task.SetStepDone(stepId, 5);
+
+        Assert.NotNull(result);
+        Assert.True(result.IsFailure);
+        Assert.Equal(StepErrors.StateNotMatching.Code, result.Error.Code);
+        Assert.Equal(StepErrors.StateNotMatching.Description, result.Error.Description);
     }
 
     /// <summary>
