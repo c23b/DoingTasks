@@ -1,6 +1,6 @@
 ﻿using DoingTasks.Domain.Workspaces;
 
-namespace DoingTasks.Domain.WorkspaceTests;
+namespace DoingTasks.Domain.UnitTests.Workspaces;
 
 /// <summary>
 /// Unit tests for the <see cref="Workspace"/> aggregate root.

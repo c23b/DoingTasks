@@ -1,6 +1,6 @@
 ﻿using DoingTasks.Domain.Users;
 
-namespace DoingTasks.Domain.UnitTests;
+namespace DoingTasks.Domain.UnitTests.Users;
 
 /// <summary>
 /// Unit tests for the <see cref="User.User"/> aggregate root.

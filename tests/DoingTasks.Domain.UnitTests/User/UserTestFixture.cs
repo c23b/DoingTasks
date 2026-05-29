@@ -1,5 +1,5 @@
 ﻿using DoingTasks.Domain.Users;
-namespace DoingTasks.Domain.UnitTests;
+namespace DoingTasks.Domain.UnitTests.Users;
 
 [CollectionDefinition(nameof(UserCollection))]
 public class UserCollection : ICollectionFixture<UserTestFixture> { }

@@ -1,5 +1,5 @@
 ﻿using DoingTasks.Domain.Workspaces;
-namespace DoingTasks.Domain.WorkspaceTests;
+namespace DoingTasks.Domain.UnitTests.Workspaces;
 
 [CollectionDefinition(nameof(WorkspaceCollection))]
 public class WorkspaceCollection : ICollectionFixture<WorkspaceTestFixture> { }
