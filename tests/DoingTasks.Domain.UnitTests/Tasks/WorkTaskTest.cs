@@ -1,4 +1,6 @@
 ﻿using DoingTasks.Domain.Tasks;
+using DoingTasks.SharedKernel.Services;
+using Moq;
 
 namespace DoingTasks.Domain.UnitTests.Tasks;
 
@@ -477,13 +479,16 @@ public class WorkTaskTest
     [Fact(DisplayName = "WorkTask - UpdateActualHours Error ActualHoursBelowStepsTotal")]
     public void WorkTask_UpdateActualHours_Error_ActualHoursBelowStepsTotal()
     {
+        var dateTimeProviderMock = new Mock<IDateTimeProvider>();
+        dateTimeProviderMock.Setup(x => x.UtcNow).Returns(DateTime.UtcNow);
+
         var task = _workTaskTestFixture.GenerateWorkTask();
         var stateId = task.CurrentStateId;
         
         // Add a step and mark it as done
         task.AddStep("Step 1", stateId);
         var step = task.Steps.First();
-        task.SetStepStatusDone(step.Id, 5, DateTime.UtcNow);
+        task.SetStepStatusDone(step.Id, 5, dateTimeProviderMock.Object.UtcNow);
 
         // Try to set actual hours below the total step hours
         var result = task.UpdateActualHours(3);
@@ -739,12 +744,15 @@ public class WorkTaskTest
     [Fact(DisplayName = "WorkTask - SetStepStatusDone Success")]
     public void WorkTask_SetStepDone_Success()
     {
+        var dateTimeProviderMock = new Mock<IDateTimeProvider>();
+        dateTimeProviderMock.Setup(x => x.UtcNow).Returns(DateTime.UtcNow);
+
         var task = _workTaskTestFixture.GenerateWorkTask();
         var stateId = task.CurrentStateId;
         task.AddStep("Step 1", stateId);
         var stepId = task.Steps.First().Id;
 
-        var result = task.SetStepStatusDone(stepId, 5, DateTime.UtcNow);
+        var result = task.SetStepStatusDone(stepId, 5, dateTimeProviderMock.Object.UtcNow);
 
         Assert.NotNull(result);
         Assert.True(result.IsSuccess);
@@ -762,9 +770,12 @@ public class WorkTaskTest
     [Fact(DisplayName = "WorkTask - SetStepStatusDone Error NotFound")]
     public void WorkTask_SetStepStatusDone_Error_NotFound()
     {
+        var dateTimeProviderMock = new Mock<IDateTimeProvider>();
+        dateTimeProviderMock.Setup(x => x.UtcNow).Returns(DateTime.UtcNow);
+
         var task = _workTaskTestFixture.GenerateWorkTask();
 
-        var result = task.SetStepStatusDone(Guid.NewGuid(), 5, DateTime.UtcNow);
+        var result = task.SetStepStatusDone(Guid.NewGuid(), 5, dateTimeProviderMock.Object.UtcNow);
 
         Assert.NotNull(result);
         Assert.True(result.IsFailure);
@@ -781,12 +792,15 @@ public class WorkTaskTest
     [Fact(DisplayName = "WorkTask - SetStepStatusDone Error InvalidHours")]
     public void WorkTask_SetStepStatusDone_Error_InvalidHours()
     {
+        var dateTimeProviderMock = new Mock<IDateTimeProvider>();
+        dateTimeProviderMock.Setup(x => x.UtcNow).Returns(DateTime.UtcNow);
+
         var task = _workTaskTestFixture.GenerateWorkTask();
         var stateId = task.CurrentStateId;
         task.AddStep("Step 1", stateId);
         var stepId = task.Steps.First().Id;
 
-        var result = task.SetStepStatusDone(stepId, -5, DateTime.UtcNow);
+        var result = task.SetStepStatusDone(stepId, -5, dateTimeProviderMock.Object.UtcNow);
 
         Assert.NotNull(result);
         Assert.True(result.IsFailure);
@@ -800,9 +814,12 @@ public class WorkTaskTest
     /// <remarks>
     /// Verifies that setting a non-existent step to done returns StepAlreadyStatus error.
     /// </remarks>
-    [Fact(DisplayName = "WorkTask - SetStepStatusDone Error StepAlreadyStatus")]
+    [Fact(DisplayName = "WorkTask - SetStepStatusDone Error StateNotMatching")]
     public void WorkTask_SetStepStatusDone_Error_StateNotMatching()
     {
+        var dateTimeProviderMock = new Mock<IDateTimeProvider>();
+        dateTimeProviderMock.Setup(x => x.UtcNow).Returns(DateTime.UtcNow);
+
         var task = _workTaskTestFixture.GenerateWorkTask();
         var stepStateId = Guid.NewGuid();
         var differentStateId = Guid.NewGuid();
@@ -811,8 +828,8 @@ public class WorkTaskTest
         task.AddStep("Step 1");
         var stepId = task.Steps.First().Id;
 
-        var setStepStatusDone = task.SetStepStatusDone(stepId, 5, DateTime.UtcNow);
-        var result = task.SetStepStatusDone(stepId, 5, DateTime.UtcNow);
+        var setStepStatusDone = task.SetStepStatusDone(stepId, 5, dateTimeProviderMock.Object.UtcNow);
+        var result = task.SetStepStatusDone(stepId, 5, dateTimeProviderMock.Object.UtcNow);
 
         Assert.NotNull(result);
         Assert.True(result.IsFailure);
@@ -1079,6 +1096,9 @@ public class WorkTaskTest
     [Fact(DisplayName = "WorkTask - TotalStepHours Calculated Correctly")]
     public void WorkTask_TotalStepHours_CalculatedCorrectly()
     {
+        var dateTimeProviderMock = new Mock<IDateTimeProvider>();
+        dateTimeProviderMock.Setup(x => x.UtcNow).Returns(DateTime.UtcNow);
+
         var task = _workTaskTestFixture.GenerateWorkTask();
         var stateId = task.CurrentStateId;
 
@@ -1089,8 +1109,8 @@ public class WorkTaskTest
         var step1Id = task.Steps.ElementAt(0).Id;
         var step2Id = task.Steps.ElementAt(1).Id;
 
-        task.SetStepStatusDone(step1Id, 3, DateTime.UtcNow);
-        task.SetStepStatusDone(step2Id, 2, DateTime.UtcNow);
+        task.SetStepStatusDone(step1Id, 3, dateTimeProviderMock.Object.UtcNow);
+        task.SetStepStatusDone(step2Id, 2, dateTimeProviderMock.Object.UtcNow);
 
         Assert.Equal(5, task.TotalStepHours);
         Assert.Equal(5, task.ActualHours);
