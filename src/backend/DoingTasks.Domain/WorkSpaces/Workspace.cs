@@ -100,7 +100,7 @@ public sealed class Workspace : AggregateRoot
         if (reorder is false && order != maxOrder + 1)
             return Result.Failure(WorkspaceErrors.StateOrderGap);
 
-        var stateResult = WorkspaceState.Create(name, orderResult.Value);
+        var stateResult = WorkspaceState.Create(this.Id, name, orderResult.Value);
         if (stateResult.IsFailure)
             return Result.Failure(stateResult.Error);
 
@@ -192,7 +192,7 @@ public sealed class Workspace : AggregateRoot
         if (_members.Any(m => m.UserId == userId))
             return Result.Failure(WorkspaceErrors.AlreadyMember);
 
-        _members.Add(WorkspaceMember.Create(userId, memberRole));
+        _members.Add(WorkspaceMember.Create(this.Id, userId, memberRole));
         RaiseDomainEvent(new MemberInvitedDomainEvent(Id, userId));
         return Result.Success();
     }

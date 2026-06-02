@@ -483,7 +483,7 @@ public class WorkTaskTest
         // Add a step and mark it as done
         task.AddStep("Step 1", stateId);
         var step = task.Steps.First();
-        task.SetStepDone(step.Id, 5);
+        task.SetStepStatusDone(step.Id, 5);
 
         // Try to set actual hours below the total step hours
         var result = task.UpdateActualHours(3);
@@ -531,16 +531,14 @@ public class WorkTaskTest
     public void WorkTask_AddStep_Success()
     {
         var task = _workTaskTestFixture.GenerateWorkTask();
-        var stateId = Guid.NewGuid();
         var userId = Guid.NewGuid();
 
-        var result = task.AddStep("Step Title", stateId, userId);
+        var result = task.AddStep("Step Title", userId);
 
         Assert.NotNull(result);
         Assert.True(result.IsSuccess);
         Assert.Single(task.Steps);
         Assert.Equal("Step Title", task.Steps.First().Title);
-        Assert.Equal(stateId, task.Steps.First().WorkspaceStateId);
         Assert.Equal(userId, task.Steps.First().AssignedUserId);
     }
 
@@ -603,38 +601,41 @@ public class WorkTaskTest
     }
 
     /// <summary>
-    /// Tests setting a step to doing.
+    /// Tests setting a step to pending.
     /// </summary>
     /// <remarks>
-    /// Verifies that a step can be marked as doing when the task is in the corresponding state.
+    /// Verifies that a step can be marked as pending when the task is in the corresponding state.
     /// </remarks>
-    [Fact(DisplayName = "WorkTask - SetStepDoing Success")]
-    public void WorkTask_SetStepDoing_Success()
+    [Fact(DisplayName = "WorkTask - SetStepStatusPending Success")]
+    public void WorkTask_SetStepStatusPending_Success()
     {
         var task = _workTaskTestFixture.GenerateWorkTask();
         var stateId = task.CurrentStateId;
         task.AddStep("Step 1", stateId);
         var stepId = task.Steps.First().Id;
+        var setStepStatusDoing = task.SetStepStatusDoing(stepId);
 
-        var result = task.SetStepDoing(stepId);
+        var result = task.SetStepStatusPending(stepId);
 
+        Assert.NotNull(setStepStatusDoing);
+        Assert.True(setStepStatusDoing.IsSuccess);
         Assert.NotNull(result);
         Assert.True(result.IsSuccess);
-        Assert.True(task.Steps.First().IsDoing);
+        Assert.Equal(StepStatus.Pending, task.Steps.First().StepStatus);
     }
 
     /// <summary>
-    /// Tests set step doing failure when step does not exist.
+    /// Tests set step Pending failure when step does not exist.
     /// </summary>
     /// <remarks>
-    /// Verifies that setting a non-existent step to doing returns NotFound error.
+    /// Verifies that setting a non-existent step to Pending returns NotFound error.
     /// </remarks>
-    [Fact(DisplayName = "WorkTask - SetStepDoing Error NotFound")]
-    public void WorkTask_SetStepDoing_Error_NotFound()
+    [Fact(DisplayName = "WorkTask - SetStepStatusPending Error NotFound")]
+    public void WorkTask_SetStepStatusPending_Error_NotFound()
     {
         var task = _workTaskTestFixture.GenerateWorkTask();
 
-        var result = task.SetStepDoing(Guid.NewGuid());
+        var result = task.SetStepStatusPending(Guid.NewGuid());
 
         Assert.NotNull(result);
         Assert.True(result.IsFailure);
@@ -643,31 +644,90 @@ public class WorkTaskTest
     }
 
     /// <summary>
-    /// Tests set step doing failure when task is not in the corresponding state.
+    /// Tests set step pending failure when step is already in that status.
     /// </summary>
     /// <remarks>
-    /// Verifies that a step cannot be marked as doing if the task is not in the corresponding workspace state.
+    /// Verifies that setting a non-existent step to pending returns StepAlreadyStatus error.
     /// </remarks>
-    [Fact(DisplayName = "WorkTask - SetStepDoing Error StateNotMatching")]
-    public void WorkTask_SetStepDoing_Error_StateNotMatching()
+    [Fact(DisplayName = "WorkTask - SetStepStatusPending Error StepAlreadyStatus")]
+    public void WorkTask_SetStepStatusPending_Error_StepAlreadyStatus()
     {
         var task = _workTaskTestFixture.GenerateWorkTask();
-        var stepStateId = Guid.NewGuid();
-        var differentStateId = Guid.NewGuid();
-        
-        // Add step with one state
-        task.AddStep("Step 1", stepStateId);
+        var stateId = task.CurrentStateId;
+        task.AddStep("Step 1", stateId);
         var stepId = task.Steps.First().Id;
-        
-        // Transition task to a different state
-        task.TransitionToState(differentStateId);
 
-        var result = task.SetStepDoing(stepId);
+        var result = task.SetStepStatusPending(stepId);
 
         Assert.NotNull(result);
         Assert.True(result.IsFailure);
-        Assert.Equal(StepErrors.StateNotMatching.Code, result.Error.Code);
-        Assert.Equal(StepErrors.StateNotMatching.Description, result.Error.Description);
+        Assert.Equal(StepErrors.StepAlreadyStatus.Code, result.Error.Code);
+        Assert.Equal(StepErrors.StepAlreadyStatus.Description, result.Error.Description);
+    }
+
+    /// <summary>
+    /// Tests setting a step to doing.
+    /// </summary>
+    /// <remarks>
+    /// Verifies that a step can be marked as doing when the task is in the corresponding state.
+    /// </remarks>
+    [Fact(DisplayName = "WorkTask - SetStepStatusDoing Success")]
+    public void WorkTask_SetStepStatusDoing_Success()
+    {
+        var task = _workTaskTestFixture.GenerateWorkTask();
+        var stateId = task.CurrentStateId;
+        task.AddStep("Step 1", stateId);
+        var stepId = task.Steps.First().Id;
+
+        var result = task.SetStepStatusDoing(stepId);
+
+        Assert.NotNull(result);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(StepStatus.Doing, task.Steps.First().StepStatus);
+    }
+
+    /// <summary>
+    /// Tests set step doing failure when step does not exist.
+    /// </summary>
+    /// <remarks>
+    /// Verifies that setting a non-existent step to doing returns NotFound error.
+    /// </remarks>
+    [Fact(DisplayName = "WorkTask - SetStepStatusDoing Error NotFound")]
+    public void WorkTask_SetStepStatusDoing_Error_NotFound()
+    {
+        var task = _workTaskTestFixture.GenerateWorkTask();
+
+        var result = task.SetStepStatusDoing(Guid.NewGuid());
+
+        Assert.NotNull(result);
+        Assert.True(result.IsFailure);
+        Assert.Equal(StepErrors.NotFound.Code, result.Error.Code);
+        Assert.Equal(StepErrors.NotFound.Description, result.Error.Description);
+    }
+
+    /// <summary>
+    /// Tests set step doing failure when step is already in that status.
+    /// </summary>
+    /// <remarks>
+    /// Verifies that setting a non-existent step to doing returns StepAlreadyStatus error.
+    /// </remarks>
+    [Fact(DisplayName = "WorkTask - SetStepStatusDoing Error StepAlreadyStatus")]
+    public void WorkTask_SetStepStatusDoing_Error_StepAlreadyStatus()
+    {
+        var task = _workTaskTestFixture.GenerateWorkTask();
+        var stateId = task.CurrentStateId;
+        task.AddStep("Step 1", stateId);
+        var stepId = task.Steps.First().Id;
+
+        var setStepStatusDoing = task.SetStepStatusDoing(stepId);
+        var result = task.SetStepStatusDoing(stepId);
+
+        Assert.NotNull(setStepStatusDoing);
+        Assert.True(setStepStatusDoing.IsSuccess);
+        Assert.NotNull(result);
+        Assert.True(result.IsFailure);
+        Assert.Equal(StepErrors.StepAlreadyStatus.Code, result.Error.Code);
+        Assert.Equal(StepErrors.StepAlreadyStatus.Description, result.Error.Description);
     }
 
     /// <summary>
@@ -676,7 +736,7 @@ public class WorkTaskTest
     /// <remarks>
     /// Verifies that a step can be marked as done with hours spent when task is in the corresponding state.
     /// </remarks>
-    [Fact(DisplayName = "WorkTask - SetStepDone Success")]
+    [Fact(DisplayName = "WorkTask - SetStepStatusDone Success")]
     public void WorkTask_SetStepDone_Success()
     {
         var task = _workTaskTestFixture.GenerateWorkTask();
@@ -684,11 +744,11 @@ public class WorkTaskTest
         task.AddStep("Step 1", stateId);
         var stepId = task.Steps.First().Id;
 
-        var result = task.SetStepDone(stepId, 5);
+        var result = task.SetStepStatusDone(stepId, 5);
 
         Assert.NotNull(result);
         Assert.True(result.IsSuccess);
-        Assert.True(task.Steps.First().IsDone);
+        Assert.Equal(StepStatus.Done, task.Steps.First().StepStatus);
         Assert.Equal(5, task.Steps.First().ActualHours);
         Assert.Equal(5, task.ActualHours); // Task actual hours should be updated to match total step hours
     }
@@ -699,12 +759,12 @@ public class WorkTaskTest
     /// <remarks>
     /// Verifies that marking a non-existent step as done returns NotFound error.
     /// </remarks>
-    [Fact(DisplayName = "WorkTask - SetStepDone Error NotFound")]
-    public void WorkTask_SetStepDone_Error_NotFound()
+    [Fact(DisplayName = "WorkTask - SetStepStatusDone Error NotFound")]
+    public void WorkTask_SetStepStatusDone_Error_NotFound()
     {
         var task = _workTaskTestFixture.GenerateWorkTask();
 
-        var result = task.SetStepDone(Guid.NewGuid(), 5);
+        var result = task.SetStepStatusDone(Guid.NewGuid(), 5);
 
         Assert.NotNull(result);
         Assert.True(result.IsFailure);
@@ -718,15 +778,15 @@ public class WorkTaskTest
     /// <remarks>
     /// Verifies that a step cannot be marked as done with negative hours.
     /// </remarks>
-    [Fact(DisplayName = "WorkTask - SetStepDone Error InvalidHours")]
-    public void WorkTask_SetStepDone_Error_InvalidHours()
+    [Fact(DisplayName = "WorkTask - SetStepStatusDone Error InvalidHours")]
+    public void WorkTask_SetStepStatusDone_Error_InvalidHours()
     {
         var task = _workTaskTestFixture.GenerateWorkTask();
         var stateId = task.CurrentStateId;
         task.AddStep("Step 1", stateId);
         var stepId = task.Steps.First().Id;
 
-        var result = task.SetStepDone(stepId, -5);
+        var result = task.SetStepStatusDone(stepId, -5);
 
         Assert.NotNull(result);
         Assert.True(result.IsFailure);
@@ -735,31 +795,29 @@ public class WorkTaskTest
     }
 
     /// <summary>
-    /// Tests set step done failure when task is not in the corresponding state.
+    /// Tests set step done failure when step is already in that status.
     /// </summary>
     /// <remarks>
-    /// Verifies that a step cannot be marked as done if the task is not in the corresponding workspace state.
+    /// Verifies that setting a non-existent step to done returns StepAlreadyStatus error.
     /// </remarks>
-    [Fact(DisplayName = "WorkTask - SetStepDone Error StateNotMatching")]
-    public void WorkTask_SetStepDone_Error_StateNotMatching()
+    [Fact(DisplayName = "WorkTask - SetStepStatusDone Error StepAlreadyStatus")]
+    public void WorkTask_SetStepStatusDone_Error_StateNotMatching()
     {
         var task = _workTaskTestFixture.GenerateWorkTask();
         var stepStateId = Guid.NewGuid();
         var differentStateId = Guid.NewGuid();
         
         // Add step with one state
-        task.AddStep("Step 1", stepStateId);
+        task.AddStep("Step 1");
         var stepId = task.Steps.First().Id;
-        
-        // Transition task to a different state
-        task.TransitionToState(differentStateId);
 
-        var result = task.SetStepDone(stepId, 5);
+        var setStepStatusDone = task.SetStepStatusDone(stepId, 5);
+        var result = task.SetStepStatusDone(stepId, 5);
 
         Assert.NotNull(result);
         Assert.True(result.IsFailure);
-        Assert.Equal(StepErrors.StateNotMatching.Code, result.Error.Code);
-        Assert.Equal(StepErrors.StateNotMatching.Description, result.Error.Description);
+        Assert.Equal(StepErrors.StepAlreadyStatus.Code, result.Error.Code);
+        Assert.Equal(StepErrors.StepAlreadyStatus.Description, result.Error.Description);
     }
 
     /// <summary>
@@ -795,46 +853,6 @@ public class WorkTaskTest
         var task = _workTaskTestFixture.GenerateWorkTask();
 
         var result = task.AssignStep(Guid.NewGuid(), Guid.NewGuid());
-
-        Assert.NotNull(result);
-        Assert.True(result.IsFailure);
-        Assert.Equal(StepErrors.NotFound.Code, result.Error.Code);
-        Assert.Equal(StepErrors.NotFound.Description, result.Error.Description);
-    }
-
-    /// <summary>
-    /// Tests updating workspace state of a step.
-    /// </summary>
-    /// <remarks>
-    /// Verifies that a step's workspace state can be updated.
-    /// </remarks>
-    [Fact(DisplayName = "WorkTask - UpdateWorkspaceStateOfStep Success")]
-    public void WorkTask_UpdateWorkspaceStateOfStep_Success()
-    {
-        var task = _workTaskTestFixture.GenerateWorkTask();
-        task.AddStep("Step 1", Guid.NewGuid());
-        var stepId = task.Steps.First().Id;
-        var newStateId = Guid.NewGuid();
-
-        var result = task.UpdateWorkspaceStateOfStep(stepId, newStateId);
-
-        Assert.NotNull(result);
-        Assert.True(result.IsSuccess);
-        Assert.Equal(newStateId, task.Steps.First().WorkspaceStateId);
-    }
-
-    /// <summary>
-    /// Tests update workspace state failure when step does not exist.
-    /// </summary>
-    /// <remarks>
-    /// Verifies that updating workspace state of a non-existent step returns NotFound error.
-    /// </remarks>
-    [Fact(DisplayName = "WorkTask - UpdateWorkspaceStateOfStep Error NotFound")]
-    public void WorkTask_UpdateWorkspaceStateOfStep_Error_NotFound()
-    {
-        var task = _workTaskTestFixture.GenerateWorkTask();
-
-        var result = task.UpdateWorkspaceStateOfStep(Guid.NewGuid(), Guid.NewGuid());
 
         Assert.NotNull(result);
         Assert.True(result.IsFailure);
@@ -1071,8 +1089,8 @@ public class WorkTaskTest
         var step1Id = task.Steps.ElementAt(0).Id;
         var step2Id = task.Steps.ElementAt(1).Id;
 
-        task.SetStepDone(step1Id, 3);
-        task.SetStepDone(step2Id, 2);
+        task.SetStepStatusDone(step1Id, 3);
+        task.SetStepStatusDone(step2Id, 2);
 
         Assert.Equal(5, task.TotalStepHours);
         Assert.Equal(5, task.ActualHours);

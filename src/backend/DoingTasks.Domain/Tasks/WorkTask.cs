@@ -153,9 +153,9 @@ public sealed class WorkTask : AggregateRoot
         return Result.Success();
     }
 
-    public Result AddStep(string title, Guid workspaceStateId, Guid? assignedUserId = null)
+    public Result AddStep(string title, Guid? assignedUserId = null)
     {
-        var stepResult = Step.Create(title, this.Id, workspaceStateId, assignedUserId);
+        var stepResult = Step.Create(title, this.Id, assignedUserId);
         if (stepResult.IsFailure)
             return Result.Failure(stepResult.Error);
 
@@ -174,22 +174,31 @@ public sealed class WorkTask : AggregateRoot
         return Result.Success();
     }
 
-    public Result SetStepDoing(Guid stepId)
+    public Result SetStepStatusPending(Guid stepId)
     {
         var step = _steps.FirstOrDefault(s => s.Id == stepId);
         if (step is null)
             return Result.Failure(StepErrors.NotFound);
 
-        return step.SetDoing(CurrentStateId);
+        return step.SetStepStatusPending();
     }
 
-    public Result SetStepDone(Guid stepId, int hoursSpent)
+    public Result SetStepStatusDoing(Guid stepId)
     {
         var step = _steps.FirstOrDefault(s => s.Id == stepId);
         if (step is null)
             return Result.Failure(StepErrors.NotFound);
 
-        var result = step.SetDone(CurrentStateId, hoursSpent);
+        return step.SetStepStatusDoing();
+    }
+
+    public Result SetStepStatusDone(Guid stepId, int hoursSpent)
+    {
+        var step = _steps.FirstOrDefault(s => s.Id == stepId);
+        if (step is null)
+            return Result.Failure(StepErrors.NotFound);
+
+        var result = step.SetStepStatusDone(hoursSpent);
         if (result.IsFailure)
             return result;
 
@@ -209,15 +218,6 @@ public sealed class WorkTask : AggregateRoot
         return step.Assign(userId);
     }
 
-    public Result UpdateWorkspaceStateOfStep(Guid stepId, Guid workspaceStateId)
-    {
-        var step = _steps.FirstOrDefault(s => s.Id == stepId);
-        if (step is null)
-            return Result.Failure(StepErrors.NotFound);
-
-        return step.UpdateWorkspaceState(workspaceStateId);
-    }
-
     public Result RetitleStep(Guid stepId, string title)
     {
         var step = _steps.FirstOrDefault(s => s.Id == stepId);
@@ -229,7 +229,7 @@ public sealed class WorkTask : AggregateRoot
 
     public Result AddComment(string content, Guid authorId)
     {
-        var commentResult = TaskComment.Create(content, authorId);
+        var commentResult = TaskComment.Create(this.Id, authorId, content);
         if (commentResult.IsFailure)
             return Result.Failure(commentResult.Error);
 

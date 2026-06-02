@@ -6,21 +6,21 @@ namespace DoingTasks.Domain.Tasks;
 public sealed class TaskComment : Entity
 {
     public string Content { get; private set; }
+    public Guid WorkTaskId { get; private set; }
     public Guid AuthorId { get; private set; }
-    public DateTime CreatedAt { get; private set; }
 
     private TaskComment() { }
 
-    internal static Result<TaskComment> Create(string content, Guid authorId)
+    internal static Result<TaskComment> Create(Guid workTaskId, Guid authorId, string content)
     {
         if (string.IsNullOrWhiteSpace(content))
             return Result.Failure<TaskComment>(TaskCommentErrors.ContentRequired);
 
         return Result.Success(new TaskComment
         {
-            Content = content,
+            WorkTaskId = workTaskId,
             AuthorId = authorId,
-            CreatedAt = DateTime.UtcNow
+            Content = content,
         });
     }
 

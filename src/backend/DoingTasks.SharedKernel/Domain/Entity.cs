@@ -9,6 +9,6 @@ public abstract class Entity
     {
         Id = Guid.NewGuid();
     }
-    internal void SetCreatedAt(DateTime createdAt) => CreatedAt = createdAt;
-    internal void SetUpdatedAt(DateTime updatedAt) => UpdatedAt = updatedAt;
+    public void SetCreatedAt(DateTime createdAt) => CreatedAt = createdAt;
+    public void SetUpdatedAt(DateTime updatedAt) => UpdatedAt = updatedAt;
 }

@@ -18,15 +18,16 @@ public class UserTestFixture : IDisposable
     public User GenerateUser()
     {
         return User.Create(
+            Guid.NewGuid().ToString(),
             "Person Slva", 
             "person@test.com", 
             "Pessoa", 
             new DateOnly(1990, 01, 01)).Value;
     }
 
-    public User GenerateUser(string fullName, string email, string nickname, DateOnly birthDate)
+    public User GenerateUser(string identityId, string fullName, string email, string nickname, DateOnly birthDate)
     {
-        return User.Create(fullName, email, nickname, birthDate).Value;
+        return User.Create(identityId, fullName, email, nickname, birthDate).Value;
     }
 
 
