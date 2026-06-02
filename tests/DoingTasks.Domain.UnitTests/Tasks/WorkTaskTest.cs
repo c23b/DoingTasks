@@ -814,16 +814,14 @@ public class WorkTaskTest
     /// <remarks>
     /// Verifies that setting a non-existent step to done returns StepAlreadyStatus error.
     /// </remarks>
-    [Fact(DisplayName = "WorkTask - SetStepStatusDone Error StateNotMatching")]
-    public void WorkTask_SetStepStatusDone_Error_StateNotMatching()
+    [Fact(DisplayName = "WorkTask - SetStepStatusDone Error StepAlreadyStatus")]
+    public void WorkTask_SetStepStatusDone_Error_StepAlreadyStatus()
     {
         var dateTimeProviderMock = new Mock<IDateTimeProvider>();
         dateTimeProviderMock.Setup(x => x.UtcNow).Returns(DateTime.UtcNow);
 
         var task = _workTaskTestFixture.GenerateWorkTask();
-        var stepStateId = Guid.NewGuid();
-        var differentStateId = Guid.NewGuid();
-        
+                
         // Add step with one state
         task.AddStep("Step 1");
         var stepId = task.Steps.First().Id;
