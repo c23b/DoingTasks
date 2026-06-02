@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace DoingTasks.Infrastructure.Persistence.Configurations;
 
-// Infrastructure/Persistence/Configurations/StepConfiguration.cs
 public sealed class StepConfiguration : EntityConfiguration<Step>
 {
     public override void Configure(EntityTypeBuilder<Step> builder)
@@ -50,12 +49,7 @@ public sealed class StepConfiguration : EntityConfiguration<Step>
         builder.Property(s => s.AssignedUserId)
             .HasColumnName("assigned_user_id")
             .HasColumnType("uuid");
-
-        builder.HasOne<WorkTask>()
-            .WithMany(t => t.Steps)
-            .HasForeignKey(s => s.WorkTaskId)
-            .OnDelete(DeleteBehavior.Cascade);
-
+               
         builder.HasOne<User>()
             .WithMany()
             .HasForeignKey(s => s.AssignedUserId)

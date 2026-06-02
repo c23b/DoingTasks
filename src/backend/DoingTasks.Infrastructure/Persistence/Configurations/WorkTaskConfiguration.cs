@@ -71,12 +71,12 @@ public sealed class WorkTaskConfiguration : EntityConfiguration<WorkTask>
 
         builder.HasMany(t => t.Steps)
             .WithOne()
-            .HasForeignKey("work_task_id")
+            .HasForeignKey(s => s.WorkTaskId)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasMany(t => t.Comments)
             .WithOne()
-            .HasForeignKey("work_task_id")
+            .HasForeignKey(s => s.WorkTaskId)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne<Workspace>()

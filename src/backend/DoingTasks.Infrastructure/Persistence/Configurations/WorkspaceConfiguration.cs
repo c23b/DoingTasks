@@ -48,12 +48,12 @@ public sealed class WorkspaceConfiguration : EntityConfiguration<Workspace>
 
         builder.HasMany(w => w.States)
                .WithOne()
-               .HasForeignKey("workspace_id")
+               .HasForeignKey(s => s.WorkspaceId)
                .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasMany(w => w.Members)
                .WithOne()
-               .HasForeignKey("workspace_id")
+               .HasForeignKey(m => m.WorkspaceId)
                .OnDelete(DeleteBehavior.Cascade);
 
         // Ignorar propriedades computadas — não persistidas

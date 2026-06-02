@@ -192,13 +192,13 @@ public sealed class WorkTask : AggregateRoot
         return step.SetStepStatusDoing();
     }
 
-    public Result SetStepStatusDone(Guid stepId, int hoursSpent)
+    public Result SetStepStatusDone(Guid stepId, int hoursSpent, DateTime completedAt)
     {
         var step = _steps.FirstOrDefault(s => s.Id == stepId);
         if (step is null)
             return Result.Failure(StepErrors.NotFound);
 
-        var result = step.SetStepStatusDone(hoursSpent);
+        var result = step.SetStepStatusDone(hoursSpent, completedAt);
         if (result.IsFailure)
             return result;
 

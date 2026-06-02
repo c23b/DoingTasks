@@ -10,9 +10,9 @@ public sealed class WorkspaceMemberConfiguration : EntityConfiguration<Workspace
 {
     public override void Configure(EntityTypeBuilder<WorkspaceMember> builder)
     {
-        builder.ToTable("workspace_members");
-
         base.Configure(builder);
+
+        builder.ToTable("workspace_members");
 
         builder.HasKey(m => m.Id);
 
@@ -35,11 +35,6 @@ public sealed class WorkspaceMemberConfiguration : EntityConfiguration<Workspace
             .IsRequired()
             .HasColumnName("role")
             .HasColumnType("integer");
-
-        builder.HasOne<Workspace>()
-            .WithMany(w => w.Members)
-            .HasForeignKey(m => m.WorkspaceId)
-            .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne<User>()
             .WithMany()

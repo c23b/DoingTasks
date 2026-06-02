@@ -49,7 +49,7 @@ public sealed class Step : Entity
         return Result.Success();
     }
 
-    internal Result SetStepStatusDone(int hoursSpent)
+    internal Result SetStepStatusDone(int hoursSpent, DateTime completedAt)
     {
        if (hoursSpent < 0)
             return Result.Failure(StepErrors.InvalidHours);
@@ -59,7 +59,7 @@ public sealed class Step : Entity
 
         StepStatus = StepStatus.Done;
         ActualHours = hoursSpent;
-        CompletedAt = DateTime.UtcNow;
+        CompletedAt = completedAt;
         return Result.Success();
     }
 
