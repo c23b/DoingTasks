@@ -1,5 +1,4 @@
 ﻿using DoingTasks.Domain.Tasks;
-using DoingTasks.SharedKernel.Services;
 using Moq;
 
 namespace DoingTasks.Domain.UnitTests.Tasks;
@@ -829,6 +828,8 @@ public class WorkTaskTest
         var setStepStatusDone = task.SetStepStatusDone(stepId, 5, dateTimeProviderMock.Object.UtcNow);
         var result = task.SetStepStatusDone(stepId, 5, dateTimeProviderMock.Object.UtcNow);
 
+        Assert.NotNull(setStepStatusDone);
+        Assert.True(setStepStatusDone.IsSuccess);
         Assert.NotNull(result);
         Assert.True(result.IsFailure);
         Assert.Equal(StepErrors.StepAlreadyStatus.Code, result.Error.Code);

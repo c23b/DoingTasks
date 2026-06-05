@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DoingTasks.Application\DoingTasks.Application.csproj" />
+    <ProjectReference Include="..\DoingTasks.Infrastructure\DoingTasks.Infrastructure.csproj" />
     <ProjectReference Include="..\DoingTasks.SharedKernel\DoingTasks.SharedKernel.csproj" />
   </ItemGroup>
 
