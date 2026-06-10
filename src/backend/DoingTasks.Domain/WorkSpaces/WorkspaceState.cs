@@ -5,12 +5,13 @@ namespace DoingTasks.Domain.Workspaces;
 
 public sealed class WorkspaceState : Entity
 {
+    public Guid WorkspaceId { get; private set; }
     public string Name { get; private set; }
     public StateOrder Order { get; private set; }
 
     private WorkspaceState() { }
 
-    internal static Result<WorkspaceState> Create(string name, StateOrder stateOrder)
+    internal static Result<WorkspaceState> Create(Guid workspaceId, string name, StateOrder stateOrder)
     {
         if (string.IsNullOrWhiteSpace(name))
             return Result.Failure<WorkspaceState>(WorkspaceStateErrors.NameRequired);               
@@ -18,6 +19,7 @@ public sealed class WorkspaceState : Entity
         return Result.Success(new WorkspaceState
         {
             Id = Guid.NewGuid(),
+            WorkspaceId = workspaceId,
             Name = name,
             Order = stateOrder
         });

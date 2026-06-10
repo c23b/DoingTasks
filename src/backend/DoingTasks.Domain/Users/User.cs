@@ -46,6 +46,8 @@ public sealed class User : AggregateRoot
     /// </value>
     public string Email { get; private set; }
 
+    public string IdentityId { get; private set; }
+
     /// <summary>
     /// Initializes a new instance of the <see cref="User"/> class.
     /// </summary>
@@ -86,11 +88,15 @@ public sealed class User : AggregateRoot
     /// Thrown when the user is not at least 18 years old.
     /// </exception>
     public static Result<User> Create(
+        string identityId, 
         string fullName, 
         string email, 
         string nickname, 
         DateOnly birthDate)
     {
+        if (string.IsNullOrWhiteSpace(identityId))
+            return Result.Failure<User>(UserErrors.IdentityIdInvalid);
+
         if (string.IsNullOrWhiteSpace(fullName))
             return Result.Failure<User>(UserErrors.FullNameRequired);
 
@@ -110,6 +116,7 @@ public sealed class User : AggregateRoot
             Nickname = nicknameResult.Value,
             BirthDate = birthDate,
             Email = email,
+            IdentityId = identityId
         };
 
         user.RaiseDomainEvent(new UserCreatedDomainEvent(user.Id));

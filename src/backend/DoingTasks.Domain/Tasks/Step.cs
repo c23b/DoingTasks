@@ -7,9 +7,7 @@ public sealed class Step : Entity
 {
     public Guid WorkTaskId { get; private set; }
     public string Title { get; private set; }
-    public Guid WorkspaceStateId { get; private set; }
-    public bool IsDoing { get; private set; }
-    public bool IsDone { get; private set; }
+    public StepStatus StepStatus { get; private set; }
     public DateTime? CompletedAt { get; private set; }
     public int ActualHours { get; private set; }
     public Guid? AssignedUserId { get; private set; }
@@ -19,7 +17,6 @@ public sealed class Step : Entity
     internal static Result<Step> Create(
         string title,
         Guid workTaskId,
-        Guid workspaceStateId,
         Guid? assignedUserId = null)
     {
         if (string.IsNullOrWhiteSpace(title))
@@ -29,34 +26,40 @@ public sealed class Step : Entity
         {
             WorkTaskId = workTaskId,
             Title = title,
-            WorkspaceStateId = workspaceStateId,
-            AssignedUserId = assignedUserId
+            AssignedUserId = assignedUserId,
+            StepStatus = StepStatus.Pending
         });
     }
 
-    // INVARIANTE: Doing só pode ser alterado se a Task estiver no State do Step
-    internal Result SetDoing(Guid currentTaskStateId)
+    internal Result SetStepStatusPending()
     {
-        if (currentTaskStateId != WorkspaceStateId)
-            return Result.Failure(StepErrors.StateNotMatching);
+        if(StepStatus == StepStatus.Pending)
+            return Result.Failure(StepErrors.StepAlreadyStatus);
 
-        IsDoing = true;
+        StepStatus = StepStatus.Pending;
         return Result.Success();
     }
 
-    // INVARIANTE: Done só pode ser alterado se a Task estiver no State do Step
-    internal Result SetDone(Guid currentTaskStateId, int hoursSpent)
+    internal Result SetStepStatusDoing()
     {
-        if (currentTaskStateId != WorkspaceStateId)
-            return Result.Failure(StepErrors.StateNotMatching);
+        if (StepStatus == StepStatus.Doing)
+            return Result.Failure(StepErrors.StepAlreadyStatus);
 
-        if (hoursSpent < 0)
+        StepStatus = StepStatus.Doing;
+        return Result.Success();
+    }
+
+    internal Result SetStepStatusDone(int hoursSpent, DateTime completedAt)
+    {
+       if (hoursSpent < 0)
             return Result.Failure(StepErrors.InvalidHours);
 
-        IsDone = true;
-        IsDoing = false;
+        if (StepStatus == StepStatus.Done)
+            return Result.Failure(StepErrors.StepAlreadyStatus);
+
+        StepStatus = StepStatus.Done;
         ActualHours = hoursSpent;
-        CompletedAt = DateTime.UtcNow;
+        CompletedAt = completedAt;
         return Result.Success();
     }
 
@@ -64,13 +67,7 @@ public sealed class Step : Entity
     {
         AssignedUserId = userId;
         return Result.Success();
-    }
-
-    internal Result UpdateWorkspaceState(Guid workspaceStateId)
-    {
-        WorkspaceStateId = workspaceStateId;
-        return Result.Success();
-    }
+    }      
 
     internal Result Retitle(string title)
     {

@@ -30,15 +30,41 @@ public class UserTest
     public void User_Create_Success()
     {
         var birthDate = new DateOnly(1990, 01, 01);
-        var resultUser = User.Create("Person Silva", "person@test.com", "Person", birthDate);
+        var identityId = Guid.NewGuid().ToString();
+        var resultUser = User.Create(identityId, "Person Silva", "person@test.com", "Person", birthDate);
 
         Assert.NotNull(resultUser);
         Assert.True(resultUser.IsSuccess);
         Assert.NotEqual(Guid.Empty, resultUser.Value.Id);
+        Assert.Equal(identityId, resultUser.Value.IdentityId);
         Assert.Equal("Person Silva", resultUser.Value.FullName);
         Assert.Equal("person@test.com", resultUser.Value.Email);
         Assert.Equal("Person", resultUser.Value.Nickname.Value);
         Assert.Equal(birthDate, resultUser.Value.BirthDate);
+    }
+
+    /// <summary>
+    /// Tests user creation failure when full identity id invalid error.
+    /// </summary>
+    /// <remarks>
+    /// Verifies that when creating a user with an identity error, the operation fails
+    /// and returns the appropriate <see cref="UserErrors.IdentityIdInvalid"/> error.
+    /// </remarks>
+    [Fact(DisplayName = "User  - Create Error IdentityIdInvalid")]
+    public void User_Create_Error_IdentityError()
+    {
+        var resultUser = User.Create(
+            string.Empty,
+            "Person Silva",
+            "person@test.com",
+            "Person",
+            new DateOnly(1990, 01, 01));
+
+        Assert.NotNull(resultUser);
+        Assert.True(resultUser.IsFailure);
+        Assert.NotNull(resultUser.Error);
+        Assert.Equal(UserErrors.IdentityIdInvalid.Code, resultUser.Error.Code);
+        Assert.Equal(UserErrors.IdentityIdInvalid.Description, resultUser.Error.Description);
     }
 
     /// <summary>
@@ -52,6 +78,7 @@ public class UserTest
     public void User_Create_Error_FullNameRequired()
     {
         var resultUser = User.Create(
+            Guid.NewGuid().ToString(),
             string.Empty, 
             "person@test.com", 
             "Person", 
@@ -77,7 +104,7 @@ public class UserTest
     [InlineData("")]
     public void User_Create_Error_EmailInvalid(string email)
     {
-        var resultUser = User.Create("Person Silva", email, "Person", new DateOnly(1990, 01, 01));
+        var resultUser = User.Create(Guid.NewGuid().ToString(), "Person Silva", email, "Person", new DateOnly(1990, 01, 01));
 
         Assert.NotNull(resultUser);
         Assert.True(resultUser.IsFailure);
@@ -97,6 +124,7 @@ public class UserTest
     public void User_Create_Error_BirthDateInvalid()
     {
         var resultUser = User.Create(
+            Guid.NewGuid().ToString(),
             "Person Silva", 
             "person@test.com", 
             "Person", 
@@ -120,6 +148,7 @@ public class UserTest
     public void User_Create_Error_NicknameRequired()
     {
         var resultUser = User.Create(
+            Guid.NewGuid().ToString(),
             "Person Silva", 
             "person@test.com", 
             "", 
@@ -143,6 +172,7 @@ public class UserTest
     public void User_Create_Error_NicknameTooLong()
     {
         var resultUser = User.Create(
+            Guid.NewGuid().ToString(),
             "Person Silva", 
             "person@test.com",
             "Error Nickname TooLong Error Nickname TooLong Error Nickname TooLong", 

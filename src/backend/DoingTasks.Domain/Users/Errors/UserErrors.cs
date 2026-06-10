@@ -18,4 +18,8 @@ public static class UserErrors
 
     public static readonly Error IdentityError =
         Error.Problem("User.IdentityError", "An error occurred while creating the user");
+
+    public static readonly Error IdentityIdInvalid =
+        Error.Problem("User.IdentityIdInvalid", "An error occurred while linking the user identity");
+
 }
