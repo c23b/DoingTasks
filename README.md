@@ -3,48 +3,48 @@
 
  ## Commands
  ### Commands to create the initial structure
-  -dotnet new webapi -n DoingTasks.Api -f net10.0
-  -dotnet new classlib  -n DoingTasks.Application -f net10.0
-  -dotnet new classlib  -n DoingTasks.Domain -f net10.0
-  -dotnet new classlib  -n DoingTasks.Infrastructure -f net10.0
-  -dotnet new classlib  -n DoingTasks.SharedKernel -f net10.0
+  - dotnet new webapi -n DoingTasks.Api -f net10.0
+  - dotnet new classlib  -n DoingTasks.Application -f net10.0
+  - dotnet new classlib  -n DoingTasks.Domain -f net10.0
+  - dotnet new classlib  -n DoingTasks.Infrastructure -f net10.0
+  - dotnet new classlib  -n DoingTasks.SharedKernel -f net10.0
  
-  -dotnet new xunit -n DoingTasks.Application.UnitTests -f net10.0
-  -dotnet new xunit -n DoingTasks.Domain.UnitTests -f net10.0
-  -dotnet new xunit -n DoingTasks.Infrastructure.UnitTests -f net10.0
-  -dotnet new xunit -n DoingTasks.IntegrationTests -f net10.0
+  - dotnet new xunit -n DoingTasks.Application.UnitTests -f net10.0
+  - dotnet new xunit -n DoingTasks.Domain.UnitTests -f net10.0
+  - dotnet new xunit -n DoingTasks.Infrastructure.UnitTests -f net10.0
+  - dotnet new xunit -n DoingTasks.IntegrationTests -f net10.0
  
   - ng new doing-tasks --standalone --routing --style=scss --skip-git
   
-  -touch docker/backend.Dockerfile
-  -touch docker/frontend.Dockerfile
-  -touch docker-compose.yml
-  -touch docker-compose.override.yml
+  - touch docker/backend.Dockerfile
+  - touch docker/frontend.Dockerfile
+  - touch docker-compose.yml
+  - touch docker-compose.override.yml
 
  ### Commands for packages used
-  -dotnet add src/backend/DoingTasks.Infrastructure package Microsoft.EntityFrameworkCore
-  -dotnet add src/backend/DoingTasks.Infrastructure package Npgsql.EntityFrameworkCore.PostgreSQL
-  -dotnet add src/backend/DoingTasks.Infrastructure package Microsoft.EntityFrameworkCore.Design
-  -dotnet add src/backend/DoingTasks.Api package Microsoft.EntityFrameworkCore.Design
+  - dotnet add src/backend/DoingTasks.Infrastructure package Microsoft.EntityFrameworkCore
+  - dotnet add src/backend/DoingTasks.Infrastructure package Npgsql.EntityFrameworkCore.PostgreSQL
+  - dotnet add src/backend/DoingTasks.Infrastructure package Microsoft.EntityFrameworkCore.Design
+  - dotnet add src/backend/DoingTasks.Api package Microsoft.EntityFrameworkCore.Design
 
  ### Commands for dotnet and migrations
-  -dotnet tool install dotnet-ef
-  -dotnet ef migrations add InitialCreate --project src/backend/DoingTasks.Infrastructure --startup-project  src/backend/DoingTasks.Api
-  -dotnet ef database update --project src/backend/DoingTasks.Infrastructure --startup-project src/backend/ DoingTasks.Api
+  - dotnet tool install dotnet-ef
+  - dotnet ef migrations add InitialCreate --project src/backend/DoingTasks.Infrastructure --startup-project  src/backend/DoingTasks.Api
+  - dotnet ef database update --project src/backend/DoingTasks.Infrastructure --startup-project src/backend/ DoingTasks.Api
 
 
  ### Docker commands used
   #### Start all services
-   -docker-compose up
+   - docker-compose up
  
  #### Start in background mode (most common for daily use)
-  -docker-compose up -d
+  - docker-compose up -d
  
  #### View logs
-  -docker-compose logs -f
+  - docker-compose logs -f
  
  #### Stop and remove everything
-  -docker-compose down
+  - docker-compose down
  
  ## Business Rules
 
