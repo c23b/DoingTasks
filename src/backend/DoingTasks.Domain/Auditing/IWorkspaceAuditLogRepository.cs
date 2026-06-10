@@ -1,7 +1,6 @@
 ﻿
-namespace DoingTasks.Domain.Auditing
+namespace DoingTasks.Domain.Auditing;
+
+public interface IWorkspaceAuditLogRepository : IRepositoryBase<WorkspaceAuditLog>
 {
-    public interface IWorkspaceAuditLogRepository : IRepositoryBase<WorkspaceAuditLog>
-    {
-    }
 }
