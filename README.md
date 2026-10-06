@@ -31,7 +31,32 @@
   - dotnet tool install dotnet-ef
   - dotnet ef migrations add InitialCreate --project src/backend/DoingTasks.Infrastructure --startup-project  src/backend/DoingTasks.Api
   - dotnet ef database update --project src/backend/DoingTasks.Infrastructure --startup-project src/backend/ DoingTasks.Api
+  - dotnet ef migrations add InitialIdentityCreate --project src/backend/DoingTasks.Infrastructure --startup-project src/backend/DoingTasks.Api --context ApplicationIdentityDbContext
+  - dotnet ef database update --project src/backend/DoingTasks.Infrastructure --startup-project src/backend/DoingTasks.Api --context ApplicationIdentityDbContext
+ 
+ ### Commands for packages used to Authentication
+   - dotnet add src/backend/DoingTasks.Infrastructure package Microsoft.AspNetCore.Identity.EntityFrameworkCore
+   - dotnet add src/backend/DoingTasks.Infrastructure package Microsoft.AspNetCore.Authentication.JwtBearer
+   - dotnet add src/backend/DoingTasks.Infrastructure package Microsoft.AspNetCore.Authentication.Google
+  
+ ### Commands for packages used to access external services
+   - dotnet add src/backend/DoingTasks.Infrastructure package Refit
+   - dotnet add src/backend/DoingTasks.Infrastructure package Refit.HttpClientFactory
+   - dotnet add src/backend/DoingTasks.Infrastructure package Refit.Reflection
 
+### Commands for packages used to access set polly rules and resilience
+   - dotnet add src/backend/DoingTasks.Infrastructure package Polly
+   - dotnet add src/backend/DoingTasks.Infrastructure package Microsoft.Extensions.Http.Polly
+
+ ### Commands for packages used to do validations
+   - dotnet add src/backend/DoingTasks.Application package FluentValidation
+   - dotnet add src/backend/DoingTasks.Application package FluentValidation.DependencyInjectionExtensions
+
+ ### Commands for packages used to do Dependency Injection
+   - dotnet add src/backend/DoingTasks.Application package Scrutor
+
+ ### Commands for packages used to do aoi documentation
+   - dotnet add src/backend/DoingTasks.Api package Scalar.AspNetCore
 
  ### Docker commands used
   #### Start all services
