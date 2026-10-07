@@ -22,4 +22,7 @@ public static class UserErrors
     public static readonly Error IdentityIdInvalid =
         Error.Problem("User.IdentityIdInvalid", "An error occurred while linking the user identity");
 
+    public static readonly Error EmailAlreadyExists =
+        Error.Problem("User.EmailAlreadyExists", "This email already exists");
+
 }

@@ -46,6 +46,13 @@ public sealed class User : AggregateRoot
     /// </value>
     public string Email { get; private set; }
 
+    /// <summary>
+    /// Gets the user's identity provider ID.
+    /// </summary>
+    /// <value>
+    /// A string containing the unique identifier from the external identity provider (e.g., Auth0, Azure AD).
+    /// This ID is used to link the user account to their external identity provider account for authentication purposes.
+    /// </value>
     public string IdentityId { get; private set; }
 
     /// <summary>
@@ -62,11 +69,13 @@ public sealed class User : AggregateRoot
     /// </summary>
     /// <remarks>
     /// This factory method validates all input parameters according to domain rules:
+    /// - Identity ID is required and cannot be empty or whitespace.
     /// - Full name is required and cannot be empty or whitespace.
     /// - Email must be provided and match a valid email format.
     /// - Nickname must be valid according to <see cref="Nickname"/> value object rules.
     /// - User must be at least 18 years old as of the current UTC date.
     /// </remarks>
+    /// <param name="identityId">The unique identifier from the external identity provider. Cannot be null, empty, or whitespace.</param>
     /// <param name="fullName">The full name of the user. Cannot be null, empty, or whitespace.</param>
     /// <param name="email">The email address of the user. Must be a valid email format.</param>
     /// <param name="nickname">The nickname/username of the user. Must meet nickname validation rules.</param>
@@ -75,6 +84,9 @@ public sealed class User : AggregateRoot
     /// A <see cref="Result{T}"/> containing the newly created <see cref="User"/> on success,
     /// or an error containing <see cref="UserErrors"/> on failure.
     /// </returns>
+    /// <exception cref="UserErrors.IdentityIdInvalid">
+    /// Thrown when identity ID is null, empty, or whitespace.
+    /// </exception>
     /// <exception cref="UserErrors.FullNameRequired">
     /// Thrown when full name is null, empty, or whitespace.
     /// </exception>
@@ -88,15 +100,11 @@ public sealed class User : AggregateRoot
     /// Thrown when the user is not at least 18 years old.
     /// </exception>
     public static Result<User> Create(
-        string identityId, 
         string fullName, 
         string email, 
         string nickname, 
         DateOnly birthDate)
-    {
-        if (string.IsNullOrWhiteSpace(identityId))
-            return Result.Failure<User>(UserErrors.IdentityIdInvalid);
-
+    {        
         if (string.IsNullOrWhiteSpace(fullName))
             return Result.Failure<User>(UserErrors.FullNameRequired);
 
@@ -116,11 +124,38 @@ public sealed class User : AggregateRoot
             Nickname = nicknameResult.Value,
             BirthDate = birthDate,
             Email = email,
-            IdentityId = identityId
         };
 
         user.RaiseDomainEvent(new UserCreatedDomainEvent(user.Id));
         return Result.Success(user);
+    }
+
+    /// <summary>
+    /// Sets the identity ID for the user from the external identity provider.
+    /// </summary>
+    /// <remarks>
+    /// This method is used to associate the user with an external identity provider ID (e.g., from Auth0, Azure AD, or other OAuth providers).
+    /// The identity ID is essential for integrating with authentication services and enabling user login through external identity providers.
+    /// This method can be called after user creation to link the user to their identity provider account.
+    /// </remarks>
+    /// <param name="identityId">
+    /// The unique identifier from the external identity provider. Cannot be null, empty, or whitespace.
+    /// This value is typically provided by the identity provider after successful authentication.
+    /// </param>
+    /// <returns>
+    /// A <see cref="Result"/> indicating success if the identity ID is valid and has been set,
+    /// or an error containing <see cref="UserErrors.IdentityIdInvalid"/> on failure.
+    /// </returns>
+    /// <exception cref="UserErrors.IdentityIdInvalid">
+    /// Thrown when the identity ID is null, empty, or whitespace.
+    /// </exception>
+    public Result SetIdentityId(string identityId)
+    {
+        if (string.IsNullOrWhiteSpace(identityId))
+            return Result.Failure<User>(UserErrors.IdentityIdInvalid);
+
+        IdentityId = identityId;
+        return Result.Success();
     }
 
     /// <summary>
